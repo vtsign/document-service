@@ -3,6 +3,6 @@ spring:
     name: document-service
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: http://vtsign.tech:8888
 server:
   port: 8300
