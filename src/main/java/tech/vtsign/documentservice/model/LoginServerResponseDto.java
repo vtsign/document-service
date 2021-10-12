@@ -25,6 +25,8 @@ public class LoginServerResponseDto {
     private boolean blocked;
     @JsonProperty("public_key")
     private String publicKey;
+    @JsonProperty("private_key")
+    private String privateKey;
     private List<Role> roles;
     private List<Permission> permissions;
 }
