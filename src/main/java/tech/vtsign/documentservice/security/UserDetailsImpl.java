@@ -3,7 +3,6 @@ package tech.vtsign.documentservice.security;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 
 import java.util.ArrayList;
@@ -21,15 +20,17 @@ public class UserDetailsImpl implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> list = new ArrayList<>();
         //list of permission
-        this.loginServerResponseDto.getPermissions().forEach(permission ->{
-            GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getName());
-            list.add(grantedAuthority);
-        });
+        if(this.loginServerResponseDto.getPermissions()!=null)
+            this.loginServerResponseDto.getPermissions().forEach(permission ->{
+                GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getName());
+                list.add(grantedAuthority);
+            });
         // list of roles
-        this.loginServerResponseDto.getRoles().forEach(role ->{
-            GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_"+role.getName());
-            list.add(grantedAuthority);
-        });
+        if(this.loginServerResponseDto.getRoles()!=null)
+            this.loginServerResponseDto.getRoles().forEach(role ->{
+                GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_"+role.getName());
+                list.add(grantedAuthority);
+            });
         return list;
     }
 

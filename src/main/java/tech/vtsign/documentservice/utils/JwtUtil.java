@@ -1,16 +1,21 @@
 package tech.vtsign.documentservice.utils;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -65,11 +70,14 @@ public class JwtUtil {
     }
     //test
 
+    @SneakyThrows
     public LoginServerResponseDto getObjectFromToken(String token, String name) {
-        return (LoginServerResponseDto) Jwts.parserBuilder()
+        ObjectMapper mapper  = new ObjectMapper();
+        Claims jwsMap = Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .build()
-                .parseClaimsJws(token).getBody().get(name);
+                .parseClaimsJws(token).getBody();
+        return mapper.convertValue(jwsMap.get(name), LoginServerResponseDto.class);
     }
 
     public String generateAccessTokenObject(LoginServerResponseDto object) {

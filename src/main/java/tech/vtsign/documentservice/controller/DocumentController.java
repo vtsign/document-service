@@ -18,6 +18,7 @@ public class DocumentController {
         return "admin";
     }
 
+
     @GetMapping("/user")
     public String user() {
         return "user";
