@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tech.vtsign.documentservice.exception.ExpiredException;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.utils.JwtUtil;
@@ -26,6 +27,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        if (request.getRequestURI().contains("/v3/api-docs")) {
+            chain.doFilter(request, response);
+        }
 
         final String requestTokenHeader = request.getHeader("Authorization");
         LoginServerResponseDto payload = null;
@@ -34,6 +38,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // only the Toke
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
+            if (jwtTokenUtil.isTokenExpired(jwtToken)) {
+                throw new ExpiredException("Token is expired");
+            }
             payload = jwtTokenUtil.getObjectFromToken(jwtToken, "user");
         } else {
             logger.warn("JWT Token does not begin with Bearer String");

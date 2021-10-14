@@ -1,14 +1,15 @@
 package tech.vtsign.documentservice.domain;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.UUID;
-@Data
-@NoArgsConstructor
+
+@Getter
+@Setter
 @Entity
+@Builder
 @Table(name = "digital_signature")
 public class DigitalSignature {
     @Id
@@ -20,11 +21,11 @@ public class DigitalSignature {
     private String url;
 
 
-    @ManyToOne()
+    @ManyToOne( cascade = { CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "user_uuid")
     private UserUUID userUUID;
 
-    @ManyToOne()
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "document_uuid")
     private Document document;
 

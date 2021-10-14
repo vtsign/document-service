@@ -13,20 +13,11 @@ import org.springframework.stereotype.Component;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
 @Component
 //@Slf4j
 public class JwtUtil {
-    @Value("${tech.vtsign.jwt.expired_token}")
-    private long expiredToken;
-    @Value("${tech.vtsign.jwt.expired_refresh_token}")
-    private long expiredRefreshToken;
-    @Value("${tech.vtsign.jwt.issuer}")
-    private String issuer;
     @Value("${tech.vtsign.jwt.secret_key}")
     private String secretKey;
 
@@ -58,18 +49,6 @@ public class JwtUtil {
         return expiration.before(new Date());
     }
 
-    //generate token for user
-    public String generateAccessToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        return doGenerateToken(claims, username, this.expiredToken);
-    }
-
-    public String generateRefreshToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        return doGenerateToken(claims, username, this.expiredRefreshToken);
-    }
-    //test
-
     @SneakyThrows
     public LoginServerResponseDto getObjectFromToken(String token, String name) {
         ObjectMapper mapper  = new ObjectMapper();
@@ -80,26 +59,10 @@ public class JwtUtil {
         return mapper.convertValue(jwsMap.get(name), LoginServerResponseDto.class);
     }
 
-    public String generateAccessTokenObject(LoginServerResponseDto object) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("user", object);
-        return doGenerateToken(claims, object.getEmail(), this.expiredToken);
-    }
-
     public String getObjectFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
-
-    private String doGenerateToken(Map<String, Object> claims, String subject, long expiredToken) {
-        return Jwts.builder().setClaims(claims).setSubject(subject)
-                .setId(UUID.randomUUID().toString())
-                .setIssuer(this.issuer)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiredToken * 1000))
-                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
-                .compact();
-    }
 
     //validate token
     public Boolean validateToken(String token, String username) {

@@ -44,7 +44,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
         // Set permissions on endpoints
-        http.authorizeRequests().anyRequest().authenticated();
+        http.authorizeRequests()
+                .antMatchers("/v3/api-docs/document/**", "/document/v3/api-docs/**").permitAll()
+                .anyRequest().authenticated();
 
         // Add JWT token filter
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
