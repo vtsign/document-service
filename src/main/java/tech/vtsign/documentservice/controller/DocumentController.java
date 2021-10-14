@@ -3,7 +3,6 @@ package tech.vtsign.documentservice.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +29,11 @@ public class DocumentController {
         return "admin";
     }
 
-    @PostMapping(value = "/signing",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> signing(@RequestPart("document_request") DocumentClientRequest documentClientRequests, @RequestPart(name = "receivers") List<Receiver> receivers, @RequestPart List<MultipartFile> files) {
+    @PostMapping(value = "/signing")
+    public ResponseEntity<?> signing(@RequestPart("document_request") DocumentClientRequest documentClientRequests, @RequestPart List<MultipartFile> files, @RequestPart List<Receiver> receivers) {
 //        documentService.createDigitalSignature(documentClientRequest.getFiles());
-        return ResponseEntity.ok("OK");
+        System.out.println(documentClientRequests.getMailMessage());
+        return ResponseEntity.ok(documentClientRequests.getMailMessage() + receivers.size());
     }
 
 

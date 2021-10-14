@@ -8,6 +8,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import tech.vtsign.documentservice.exception.ExpiredException;
+import tech.vtsign.documentservice.exception.InvalidFormatException;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.utils.JwtUtil;
@@ -35,7 +36,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         LoginServerResponseDto payload = null;
 
         // JWT Token is in the form "Bearer token". Remove Bearer word and get
-        // only the Toke
+        // only the Token
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             if (jwtTokenUtil.isTokenExpired(jwtToken)) {
@@ -44,6 +45,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             payload = jwtTokenUtil.getObjectFromToken(jwtToken, "user");
         } else {
             logger.warn("JWT Token does not begin with Bearer String");
+            throw new InvalidFormatException("Jwt Token does not begin with Bearer String");
         }
 
         // Once we get the token validate it.
