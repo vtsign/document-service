@@ -7,10 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
-import tech.vtsign.documentservice.model.DocumentClientRequest;
-import tech.vtsign.documentservice.model.LoginServerResponseDto;
-import tech.vtsign.documentservice.model.Receiver;
-import tech.vtsign.documentservice.model.User;
+import tech.vtsign.documentservice.model.*;
+import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.DocumentRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
@@ -34,6 +32,7 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
     private final AzureStorageService azureStorageService;
     private final DocumentRepository documentRepository;
+    private final UserServiceProxy userServiceProxy;
 
     @Override
     public boolean createDigitalSignature(DocumentClientRequest clientRequest, List<MultipartFile> files) {
@@ -71,20 +70,16 @@ public class DocumentServiceImpl implements DocumentService {
                 DigitalSignature senderDigital = DigitalSignature.builder()
                         .url(urlSignature)
                         .userUUID(sender.getId())
-                        .status("CHOKY")
+                        .status(DocumentStatus.WAITING)
                         .build();
                 digitalSignatures.add(senderDigital);
-
                 List<Receiver> receivers = clientRequest.getReceivers();
                 for (Receiver receiver : receivers) {
-                    User user = User.builder()
-                            .id(UUID.randomUUID())
-                            .email(receiver.getEmail())
-                            .build(); //proxy.getUserByEmail(receiver.getEmail());
+                    LoginServerResponseDto user = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
 
                     DigitalSignature userDS = DigitalSignature.builder()
                             .userUUID(user.getId())
-                            .status("CANKY")
+                            .status(DocumentStatus.ACTION_REQUIRE)
                             .build();
 
                     digitalSignatures.add(userDS);
