@@ -1,6 +1,11 @@
 package tech.vtsign.documentservice.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
 import tech.vtsign.documentservice.service.DocumentService;
 
@@ -29,12 +35,22 @@ public class DocumentController {
     }
 
 
+    @Operation(summary = "Signing document")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = @Content
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+            })
+    })
     @PostMapping(value = "/signing")
-    public ResponseEntity<?> signing(@RequestPart("document_request") DocumentClientRequest documentClientRequests,
+    public ResponseEntity<Boolean> signing(@RequestPart("data") DocumentClientRequest documentClientRequests,
                                      @RequestPart List<MultipartFile> files) {
        documentService.createDigitalSignature(documentClientRequests ,files);
 
-        return ResponseEntity.ok(documentClientRequests);
+        return ResponseEntity.ok(true);
     }
 
 //    private final UserService userService;

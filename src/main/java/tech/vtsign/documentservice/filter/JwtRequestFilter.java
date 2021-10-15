@@ -28,38 +28,36 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        if (request.getRequestURI().contains("/v3/api-docs")) {
-            chain.doFilter(request, response);
-        }
+        if (!request.getRequestURI().contains("/v3/api-docs")) {
+            final String requestTokenHeader = request.getHeader("Authorization");
+            LoginServerResponseDto payload = null;
 
-        final String requestTokenHeader = request.getHeader("Authorization");
-        LoginServerResponseDto payload = null;
-
-        // JWT Token is in the form "Bearer token". Remove Bearer word and get
-        // only the Token
-        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-            String jwtToken = requestTokenHeader.substring(7);
-            if (jwtTokenUtil.isTokenExpired(jwtToken)) {
-                throw new ExpiredException("Token is expired");
+            // JWT Token is in the form "Bearer token". Remove Bearer word and get
+            // only the Token
+            if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+                String jwtToken = requestTokenHeader.substring(7);
+                if (jwtTokenUtil.isTokenExpired(jwtToken)) {
+                    throw new ExpiredException("Token is expired");
+                }
+                payload = jwtTokenUtil.getObjectFromToken(jwtToken, "user");
+            } else {
+                logger.warn("JWT Token does not begin with Bearer String");
+                throw new InvalidFormatException("Jwt Token does not begin with Bearer String");
             }
-            payload = jwtTokenUtil.getObjectFromToken(jwtToken, "user");
-        } else {
-            logger.warn("JWT Token does not begin with Bearer String");
-            throw new InvalidFormatException("Jwt Token does not begin with Bearer String");
-        }
 
-        // Once we get the token validate it.
-        if (payload != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetailsImpl userDetails = new UserDetailsImpl(payload);
+            // Once we get the token validate it.
+            if (payload != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetailsImpl userDetails = new UserDetailsImpl(payload);
 
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
-            usernamePasswordAuthenticationToken
-                    .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                usernamePasswordAuthenticationToken
+                        .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
+            }
         }
         chain.doFilter(request, response);
     }
