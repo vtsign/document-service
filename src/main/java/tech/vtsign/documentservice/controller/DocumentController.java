@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
-import tech.vtsign.documentservice.model.Receiver;
 import tech.vtsign.documentservice.service.DocumentService;
 
 import java.util.List;
@@ -29,13 +28,14 @@ public class DocumentController {
         return "admin";
     }
 
-    @PostMapping(value = "/signing")
-    public ResponseEntity<?> signing(@RequestPart("document_request") DocumentClientRequest documentClientRequests, @RequestPart List<MultipartFile> files, @RequestPart List<Receiver> receivers) {
-//        documentService.createDigitalSignature(documentClientRequest.getFiles());
-        System.out.println(documentClientRequests.getMailMessage());
-        return ResponseEntity.ok(documentClientRequests.getMailMessage() + receivers.size());
-    }
 
+    @PostMapping(value = "/signing")
+    public ResponseEntity<?> signing(@RequestPart("document_request") DocumentClientRequest documentClientRequests,
+                                     @RequestPart List<MultipartFile> files) {
+       documentService.createDigitalSignature(documentClientRequests ,files);
+
+        return ResponseEntity.ok(documentClientRequests);
+    }
 
 //    private final UserService userService;
 //

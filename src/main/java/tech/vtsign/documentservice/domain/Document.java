@@ -1,6 +1,5 @@
 package tech.vtsign.documentservice.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
@@ -26,7 +25,8 @@ public class Document {
     private Date viewedDate;
     @Column(name = "signed_date")
     private Date signedDate;
-    @JsonIgnore
-    @OneToMany(mappedBy = "document")
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "document_uuid")
     private List<DigitalSignature> digitalSignatures;
 }

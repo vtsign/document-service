@@ -1,6 +1,9 @@
 package tech.vtsign.documentservice.domain;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -19,13 +22,10 @@ public class DigitalSignature {
     private UUID id;
     private String status;
     private String url;
+    private UUID userUUID;
 
-
-    @ManyToOne( cascade = { CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "user_uuid")
-    private UserUUID userUUID;
-
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "document_uuid")
     private Document document;
 

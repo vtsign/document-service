@@ -7,12 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
-import tech.vtsign.documentservice.domain.UserUUID;
+import tech.vtsign.documentservice.model.DocumentClientRequest;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
+import tech.vtsign.documentservice.model.Receiver;
+import tech.vtsign.documentservice.model.User;
 import tech.vtsign.documentservice.repository.DocumentRepository;
+import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentService;
 import tech.vtsign.documentservice.utils.DSUtil;
+import tech.vtsign.documentservice.utils.FileUtil;
 import tech.vtsign.documentservice.utils.KeyReaderUtil;
 
 import java.io.IOException;
@@ -22,6 +26,7 @@ import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,32 +36,66 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
 
     @Override
-    public boolean createDigitalSignature(List<MultipartFile> files) {
-        LoginServerResponseDto principal = (LoginServerResponseDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
+    public boolean createDigitalSignature(DocumentClientRequest clientRequest, List<MultipartFile> files) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
         boolean success = true;
-        for(MultipartFile file : files) {
+        // foreach document
+        // tạo chữ kí người gửi
+        // push chữ kí người gửi và document lên storage
+        // lưu database document và bảng digital_signalture người gửi (đã có url chữ kí) status chờ kí.
+        // foreach người nhận
+        // lay thong tin nguoi nhan (*)
+        // tạo bảng digital_signature vs status cần kí lưu xuống database(khóa ngoại -> document)  chưa có url chữ kí
+        // (*): user-service
+        //nếu có tài khoản
+        //nếu chưa có tài khoản -> tạo tài khoản vs status temp
+
+        for (MultipartFile file : files) {
             try {
-                PrivateKey privateKey = KeyReaderUtil.getPrivateKey(principal.getPrivateKey());
-                byte[] digitalSignature = DSUtil.sign(file.getBytes(),privateKey);
-                String urlSignature = azureStorageService.uploadNotOverride(String.format("%s/%s",principal.getId(),principal.getId()+file.getOriginalFilename()),digitalSignature);
-                String urlDocument = azureStorageService.uploadNotOverride(String.format("%s",file.getOriginalFilename()), file.getBytes());
-                List<DigitalSignature> digitalSignatureList = new ArrayList<>();
-                UserUUID userUUID = UserUUID.builder().user_uuid(principal.getId()).build();
-                DigitalSignature digitalSignatureClass = DigitalSignature.builder()
-                                    .url(urlSignature)
-                        .userUUID(userUUID)
+                byte[] privateKeyBytes = FileUtil.readByteFromURL(senderInfo.getPrivateKey());
+                PrivateKey privateKey = KeyReaderUtil.getPrivateKey(privateKeyBytes);
+                byte[] digitalSignature = DSUtil.sign(file.getBytes(), privateKey);
+                String urlSignature = azureStorageService.uploadNotOverride(
+                        String.format("%s/%s-%s", senderInfo.getId(), UUID.randomUUID(), file.getOriginalFilename()),
+                        digitalSignature);
+                String urlDocument = azureStorageService.uploadNotOverride(
+                        String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename()),
+                        file.getBytes());
+
+                List<DigitalSignature> digitalSignatures = new ArrayList<>();
+                User sender = User.builder()
+                        .id(senderInfo.getId())
+                        .email(senderInfo.getEmail())
                         .build();
-                digitalSignatureList.add(digitalSignatureClass);
-                Document document = Document
-                                        .builder()
-                                        .url(urlDocument)
-                                        .signedDate(new Date())
+                DigitalSignature senderDigital = DigitalSignature.builder()
+                        .url(urlSignature)
+                        .userUUID(sender.getId())
+                        .status("CHOKY")
+                        .build();
+                digitalSignatures.add(senderDigital);
+
+                List<Receiver> receivers = clientRequest.getReceivers();
+                for (Receiver receiver : receivers) {
+                    User user = User.builder()
+                            .id(UUID.randomUUID())
+                            .email(receiver.getEmail())
+                            .build(); //proxy.getUserByEmail(receiver.getEmail());
+
+                    DigitalSignature userDS = DigitalSignature.builder()
+                            .userUUID(user.getId())
+                            .status("CANKY")
+                            .build();
+
+                    digitalSignatures.add(userDS);
+                }
+
+                Document document = Document.builder()
+                        .url(urlDocument)
                         .sentDate(new Date())
-                        .digitalSignatures(digitalSignatureList)
+                        .digitalSignatures(digitalSignatures)
                         .build();
                 documentRepository.save(document);
-
             } catch (Exception e) {
                 e.printStackTrace();
                 success = false;
