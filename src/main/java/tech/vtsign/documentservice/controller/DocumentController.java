@@ -17,6 +17,7 @@ import tech.vtsign.documentservice.model.DocumentClientRequest;
 import tech.vtsign.documentservice.service.DocumentService;
 
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -55,9 +56,16 @@ public class DocumentController {
 
     @PostMapping(value = "/signing")
     public ResponseEntity<Boolean> signing(@RequestPart("data") DocumentClientRequest documentClientRequests,
-                                     @RequestPart List<MultipartFile> files) {
-       documentService.createDigitalSignature(documentClientRequests ,files);
+                                           @RequestPart List<MultipartFile> files) {
+        documentService.createDigitalSignature(documentClientRequests, files);
 
         return ResponseEntity.ok(true);
     }
+
+    @GetMapping("/signing")
+    public ResponseEntity<Boolean> sign(@RequestParam("c") UUID contractUUID, @RequestParam("r") UUID reciverUUID) {
+//        Contract contract = documentService
+        return ResponseEntity.ok(true);
+    }
+
 }

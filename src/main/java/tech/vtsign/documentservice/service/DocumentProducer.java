@@ -1,7 +1,7 @@
 package tech.vtsign.documentservice.service;
 
-import tech.vtsign.documentservice.model.User;
+import tech.vtsign.documentservice.model.InfoMailReceiver;
 
 public interface DocumentProducer {
-    void sendMessage(User user);
+    void sendMessage(InfoMailReceiver infoMailReceiver);
 }

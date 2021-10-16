@@ -11,15 +11,13 @@ import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
-import tech.vtsign.documentservice.model.DocumentClientRequest;
-import tech.vtsign.documentservice.model.DocumentStatus;
-import tech.vtsign.documentservice.model.LoginServerResponseDto;
-import tech.vtsign.documentservice.model.Receiver;
+import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.DocumentRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
+import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
 import tech.vtsign.documentservice.utils.DSUtil;
 import tech.vtsign.documentservice.utils.FileUtil;
@@ -39,6 +37,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserServiceProxy userServiceProxy;
     private final ContractRepository contractRepository;
+    private final DocumentProducer documentProducer;
 
     @Value("${tech.vtsign.hostname}")
     private String hostname = "http://localhost/";
@@ -87,7 +86,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             Contract savedContract = contractRepository.save(contract);
             // sent mail
-            sendEmail(savedContract, clientRequest.getReceivers());
+            this.sendEmail(savedContract, clientRequest.getReceivers(), senderInfo.getFullName());
 
         } catch (Exception ex) {
             success = false;
@@ -127,12 +126,15 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
-    public void sendEmail(Contract contract, List<Receiver> receivers) {
+    public void sendEmail(Contract contract, List<Receiver> receivers, String fullName) {
         receivers.forEach(receiver -> {
             String url = String.format("%s%s/signed/?c=%s&r=%s",
                     hostname, contextPath,
                     contract.getId(), receiver.getId()
             );
+            InfoMailReceiver infoMailReceiver = new InfoMailReceiver(receiver.getEmail(), url, fullName);
+
+            documentProducer.sendMessage(infoMailReceiver);
             System.out.printf("sent email to %s\nurl: %s\n", receiver.getEmail(), url);
         });
 

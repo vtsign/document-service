@@ -29,4 +29,8 @@ public class LoginServerResponseDto {
     private String privateKey;
     private List<Role> roles;
     private List<Permission> permissions;
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 }
