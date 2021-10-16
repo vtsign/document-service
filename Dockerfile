@@ -24,4 +24,4 @@ WORKDIR /app
 
 EXPOSE 8300
 COPY --from=build /app/target/*.jar ./
-CMD ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/document-service.jar"]
+CMD ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/contract-service.jar"]

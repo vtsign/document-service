@@ -22,11 +22,12 @@ public class DigitalSignature {
     private UUID id;
     private String status;
     private String url;
+    @Column(name = "user_uuid")
     private UUID userUUID;
 
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "document_uuid")
-    private Document document;
+    @JoinColumn(name = "contract_uuid")
+    private Contract contract;
 
 }

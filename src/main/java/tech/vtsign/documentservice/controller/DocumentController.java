@@ -10,10 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
@@ -45,6 +42,17 @@ public class DocumentController {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
             })
     })
+
+    @GetMapping("/sign")
+    public ResponseEntity<String> signByReceiver(@RequestParam("document") String urlDocument,
+                                           @RequestParam("public-key") String urlPublickey,
+                                           @RequestParam("signature") String urlSignature
+                                           )
+    {
+        return ResponseEntity.ok("Successfull");
+    }
+
+
     @PostMapping(value = "/signing")
     public ResponseEntity<Boolean> signing(@RequestPart("data") DocumentClientRequest documentClientRequests,
                                      @RequestPart List<MultipartFile> files) {

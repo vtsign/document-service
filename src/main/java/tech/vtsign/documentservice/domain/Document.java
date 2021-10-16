@@ -1,17 +1,19 @@
 package tech.vtsign.documentservice.domain;
 
-import lombok.Builder;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
+
 @Entity
-@Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Document {
     @Id
     @GeneratedValue(generator = "uuid2")
@@ -19,14 +21,12 @@ public class Document {
     @Column(name = "document_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
     private String url;
-    @Column(name = "sent_date")
-    private Date sentDate;
-    @Column(name = "viewed_date")
-    private Date viewedDate;
-    @Column(name = "signed_date")
-    private Date signedDate;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "document_uuid")
-    private List<DigitalSignature> digitalSignatures;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "contract_uuid")
+    private Contract contract;
+
+    public Document(String url) {
+        this.url = url;
+    }
 }

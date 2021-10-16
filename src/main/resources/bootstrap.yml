@@ -8,3 +8,6 @@ server:
   port: 8300
   servlet:
     context-path: /document
+tech:
+  vtsign:
+    hostname: http://localhost:8765
