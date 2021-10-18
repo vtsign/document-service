@@ -3,12 +3,15 @@ package tech.vtsign.documentservice.service.impl;
 import com.google.common.primitives.Bytes;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.stereotype.Service;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.exception.BadRequestException;
+import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.exception.UnauthorizedException;
 import tech.vtsign.documentservice.repository.ContractRepository;
+import tech.vtsign.documentservice.repository.DigitalSignatureRepository;
 import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.utils.DSUtil;
 import tech.vtsign.documentservice.utils.FileUtil;
@@ -18,29 +21,13 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@Service
 @RequiredArgsConstructor
-
 public class ContractServiceImpl implements ContractService {
     private final ContractRepository contractRepository;
-
-
-    //Nguời nhận nhận id contract và id receiver
-    // if(isEmpty) -> throw
-    // for(documents) { get document by url, +byte }
-    // get url document, url digital signature sender và public key sender
-    // update viewDate in database
-    // digital signture from storage
-    // Decode digital signture = public key -> byte[] document -> compare
-    //if(!=) -> throw fobbiden
-    //else
-    // receiver sign byte[] document -> digital sinature
-    // push digital signature lên storage -> url
-    // update url in database digital signature of receiver
-    // push new document to storage (override) -> url
-    // update url in database document
-    // update signDate in database
-    // send mail to sender that receiver signed
+    private final DigitalSignatureRepository digitalSignatureRepository;
 
     @Override
     @SneakyThrows
@@ -76,5 +63,18 @@ public class ContractServiceImpl implements ContractService {
         }
     }
 
+    @Override
+    public Contract findContractById(UUID contractUUID) {
+        Optional<Contract> contract = contractRepository.findById(contractUUID);
+        return contract.orElseThrow(() -> new NotFoundException("Contract Not Found"));
+    }
+
+    @Override
+    public List<Contract> findAllTemplateByUserId(UUID userUUID, String status) {
+        List<DigitalSignature> digitalSignatures = digitalSignatureRepository.findByIdAndStatus(userUUID, status);
+        return digitalSignatures.stream()
+                .map(DigitalSignature::getContract)
+                .collect(Collectors.toList());
+    }
 
 }

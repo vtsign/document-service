@@ -14,7 +14,6 @@ import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
-import tech.vtsign.documentservice.repository.DocumentRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentProducer;
@@ -34,7 +33,6 @@ import java.util.UUID;
 @Slf4j
 public class DocumentServiceImpl implements DocumentService {
     private final AzureStorageService azureStorageService;
-    private final DocumentRepository documentRepository;
     private final UserServiceProxy userServiceProxy;
     private final ContractRepository contractRepository;
     private final DocumentProducer documentProducer;
@@ -129,7 +127,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void sendEmail(Contract contract, List<Receiver> receivers, String fullName) {
         receivers.forEach(receiver -> {
-            String url = String.format("%s%s/signed/?c=%s&r=%s",
+            String url = String.format("%s%s/signing/?c=%s&r=%s",
                     hostname, contextPath,
                     contract.getId(), receiver.getId()
             );

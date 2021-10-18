@@ -51,7 +51,7 @@ public class JwtUtil {
 
     @SneakyThrows
     public LoginServerResponseDto getObjectFromToken(String token, String name) {
-        ObjectMapper mapper  = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         Claims jwsMap = Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .build()

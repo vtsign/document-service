@@ -22,15 +22,15 @@ public class UserDetailsImpl implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> list = new ArrayList<>();
         //list of permission
-        if(this.loginServerResponseDto.getPermissions()!=null)
-            this.loginServerResponseDto.getPermissions().forEach(permission ->{
+        if (this.loginServerResponseDto.getPermissions() != null)
+            this.loginServerResponseDto.getPermissions().forEach(permission -> {
                 GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getName());
                 list.add(grantedAuthority);
             });
         // list of roles
-        if(this.loginServerResponseDto.getRoles()!=null)
-            this.loginServerResponseDto.getRoles().forEach(role ->{
-                GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_"+role.getName());
+        if (this.loginServerResponseDto.getRoles() != null)
+            this.loginServerResponseDto.getRoles().forEach(role -> {
+                GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_" + role.getName());
                 list.add(grantedAuthority);
             });
         return list;

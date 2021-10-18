@@ -32,8 +32,8 @@ public class GlobalConfiguration {
 
     @Bean
     public BlobContainerClient getBlobContainerClient(@Value("${azure.storage.account-name}") String accountName,
-                                                           @Value("${azure.storage.account-key}")  String accountKey,
-                                                           @Value("${azure.storage.container-name}") String containerName) {
+                                                      @Value("${azure.storage.account-key}") String accountKey,
+                                                      @Value("${azure.storage.container-name}") String containerName) {
 
         String endpoint = "https://" + accountName + ".blob.core.windows.net";
         // Create a SharedKeyCredential

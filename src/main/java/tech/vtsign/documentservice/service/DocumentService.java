@@ -8,11 +8,11 @@ import java.util.List;
 public interface DocumentService {
     boolean createDigitalSignature(DocumentClientRequest clientRequest, List<MultipartFile> files);
 
-//    // will return signature byte[]
+    //    // will return signature byte[]
     byte[] createSignature(MultipartFile file, String privateKeyUrl) throws Exception;
-//    // will return file url;
-    String uploadFile(String name, byte[] bytes);
 
+    //    // will return file url;
+    String uploadFile(String name, byte[] bytes);
 
 
 }

@@ -7,5 +7,5 @@ import tech.vtsign.documentservice.domain.Contract;
 import java.util.UUID;
 
 @Repository
-public interface DocumentRepository extends JpaRepository<Contract,UUID> {
+public interface DocumentRepository extends JpaRepository<Contract, UUID> {
 }
