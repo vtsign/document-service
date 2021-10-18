@@ -1,6 +1,7 @@
 package tech.vtsign.documentservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +25,8 @@ public class DigitalSignature {
     private String url;
     @Column(name = "user_uuid")
     private UUID userUUID;
+    @JsonProperty("public_key")
+    private String publicKey;
 
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)

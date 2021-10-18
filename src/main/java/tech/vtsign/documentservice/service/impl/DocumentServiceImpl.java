@@ -72,6 +72,7 @@ public class DocumentServiceImpl implements DocumentService {
                     .url(urlSignature)
                     .userUUID(senderInfo.getId())
                     .status(DocumentStatus.WAITING)
+                    .publicKey(senderInfo.getPublicKey())
                     .build();
 
             List<DigitalSignature> listDigitalSignature = generateDigitalSignatureReceiver(clientRequest.getReceivers());
@@ -135,7 +136,6 @@ public class DocumentServiceImpl implements DocumentService {
             InfoMailReceiver infoMailReceiver = new InfoMailReceiver(receiver.getEmail(), url, fullName);
 
             documentProducer.sendMessage(infoMailReceiver);
-            System.out.printf("sent email to %s\nurl: %s\n", receiver.getEmail(), url);
         });
 
 
@@ -147,6 +147,7 @@ public class DocumentServiceImpl implements DocumentService {
         return DigitalSignature.builder()
                 .userUUID(user.getId())
                 .status(DocumentStatus.ACTION_REQUIRE)
+                .publicKey(user.getPublicKey())
                 .build();
     }
 }

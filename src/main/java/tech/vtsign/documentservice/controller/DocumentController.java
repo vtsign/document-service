@@ -9,11 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
+import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentService;
 
 import java.util.List;
@@ -25,15 +26,9 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final ContractService contractService;
 
-    @PreAuthorize("hasRole('admin')")
-    @GetMapping("/admin")
-    public String admin() {
-        return "admin";
-    }
-
-
-    @Operation(summary = "Signing document")
+    @Operation(summary = "Signed document")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -41,16 +36,18 @@ public class DocumentController {
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-            })
+            }),
+            @ApiResponse(responseCode = "403", description = "Forbidden",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    })
     })
 
-    @GetMapping("/sign")
-    public ResponseEntity<String> signByReceiver(@RequestParam("document") String urlDocument,
-                                           @RequestParam("public-key") String urlPublickey,
-                                           @RequestParam("signature") String urlSignature
-                                           )
-    {
-        return ResponseEntity.ok("Successfull");
+    @GetMapping("/signed")
+    public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId, 
+                                                 @RequestParam("r") UUID receiverId ){
+        List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId,receiverId);
+        return ResponseEntity.ok(documents);
     }
 
 
@@ -58,14 +55,7 @@ public class DocumentController {
     public ResponseEntity<Boolean> signing(@RequestPart("data") DocumentClientRequest documentClientRequests,
                                            @RequestPart List<MultipartFile> files) {
         documentService.createDigitalSignature(documentClientRequests, files);
-
         return ResponseEntity.ok(true);
     }
-
-    @GetMapping("/signing")
-    public ResponseEntity<Boolean> sign(@RequestParam("c") UUID contractUUID, @RequestParam("r") UUID reciverUUID) {
-//        Contract contract = documentService
-        return ResponseEntity.ok(true);
-    }
-
+    
 }

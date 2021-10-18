@@ -8,11 +8,3 @@ server:
   port: 8300
   servlet:
     context-path: /document
-tech:
-  vtsign:
-    hostname: http://localhost:8765
-    kafka:
-      user-service:
-        register: 'user-service-register'
-      document-service:
-        notify-sign: 'document-service-notify-sign'
