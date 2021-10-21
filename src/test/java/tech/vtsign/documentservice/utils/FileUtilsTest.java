@@ -28,7 +28,7 @@ public class FileUtilsTest {
 
     @Test
     void testFindDigitalSignatureByIdAndStatus() {
-        List<DigitalSignature> digitalSignatureList = digitalSignatureRepository.findByIdAndStatus(UUID.fromString("1234"), "SEND");
+        List<DigitalSignature> digitalSignatureList = digitalSignatureRepository.findByUserUUIDAndStatus(UUID.fromString("1234"), "SEND");
         System.out.println(digitalSignatureList);
         assertThat(digitalSignatureList.size()).isGreaterThan(0);
     }

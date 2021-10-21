@@ -1,20 +1,20 @@
 package tech.vtsign.documentservice.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-@Builder
 @Table(name = "digital_signature")
+@NoArgsConstructor
 public class DigitalSignature {
     @Id
     @GeneratedValue(generator = "uuid2")
@@ -23,12 +23,23 @@ public class DigitalSignature {
     private UUID id;
     private String status;
     private String url;
-    @Column(name = "user_uuid")
+    @Column(name = "user_uuid", columnDefinition = "BINARY(16)")
+    @JsonProperty("user_uuid")
     private UUID userUUID;
     @JsonProperty("public_key")
     private String publicKey;
+    @JsonProperty("viewed_date")
+    private Date viewedDate;
+    @JsonProperty("signed_date")
+    private Date signedDate;
 
-    @JsonIgnore
+    public DigitalSignature(String status, String url, UUID userUUID, String publicKey) {
+        this.status = status;
+        this.url = url;
+        this.userUUID = userUUID;
+        this.publicKey = publicKey;
+    }
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     private Contract contract;

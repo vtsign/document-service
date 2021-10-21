@@ -7,5 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface DigitalSignatureRepository extends JpaRepository<DigitalSignature, UUID> {
-    List<DigitalSignature> findByIdAndStatus(UUID id, String status);
+//    List<DigitalSignature> findByIdAndStatus(UUID id, String status);
+    List<DigitalSignature> findByUserUUIDAndStatus(UUID userUUID, String status);
+    DigitalSignature findByUserUUIDAndContractId(UUID userUUID, UUID contractUUID);
 }

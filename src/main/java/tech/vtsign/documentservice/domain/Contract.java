@@ -1,7 +1,9 @@
 package tech.vtsign.documentservice.domain;
 
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -10,22 +12,20 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Builder
 @Data
+@NoArgsConstructor
 public class Contract {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
-    @Column(name = "sent_date")
-    private Date sentDate;
-    @Column(name = "viewed_date")
-    private Date viewedDate;
-    @Column(name = "signed_date")
-    private Date signedDate;
-    @Column(name = "sender_uuid")
+
+    @Column(name = "sender_uuid", columnDefinition = "BINARY(16)")
+    @JsonProperty("sender_uuid")
     private UUID senderUUID;
+    @JsonProperty("sent_date")
+    private Date sentDate;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
@@ -33,5 +33,6 @@ public class Contract {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
+    @JsonIgnore
     private List<DigitalSignature> digitalSignatures;
 }

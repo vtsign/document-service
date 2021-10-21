@@ -28,7 +28,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        if (!request.getRequestURI().contains("/v3/api-docs")) {
+        if (!request.getRequestURI().contains("/v3/api-docs") && !request.getRequestURI().contains("/apt/")) {
             final String requestTokenHeader = request.getHeader("Authorization");
             LoginServerResponseDto payload = null;
 

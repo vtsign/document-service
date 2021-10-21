@@ -1,6 +1,7 @@
 package tech.vtsign.documentservice.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class Document {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
+    @JsonIgnore
     private Contract contract;
 
     public Document(String url) {

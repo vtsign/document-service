@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.Document;
+import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
@@ -31,30 +31,7 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
-
     private final ContractService contractService;
-
-    @Operation(summary = "document")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content
-            ),
-            @ApiResponse(responseCode = "403", description = "Forbidden you don't have permission to signing this contract",
-                    content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                    }),
-            @ApiResponse(responseCode = "404", description = "Not found contract",
-                    content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                    }),
-    })
-    @GetMapping("/signing")
-    public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId,
-                                            @RequestParam("r") UUID receiverId) {
-        List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId, receiverId);
-        return ResponseEntity.ok(documents);
-    }
-
 
     @Operation(summary = "Post client files and receivers")
     @ApiResponses(value = {
@@ -83,10 +60,11 @@ public class DocumentController {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     })
     })
+
     @GetMapping("/contract")
     public ResponseEntity<?> findContractById(@RequestParam("id") UUID contractUUID) {
-        Contract contract = contractService.findContractById(contractUUID);
-        return ResponseEntity.ok(contract);
+        DigitalSignature signature = contractService.findContractById(contractUUID);
+        return ResponseEntity.ok(signature);
     }
 
     @Operation(summary = "Signed document")
@@ -103,8 +81,8 @@ public class DocumentController {
     public ResponseEntity<?> retrieveContractByStatus(@RequestParam("status") String status) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
-        contractService.findAllTemplateByUserId(userInfo.getId(), status);
-        return ResponseEntity.ok(contractService);
+        List<Contract> contracts = contractService.findAllTemplateByUserId(userInfo.getId(), status);
+        return ResponseEntity.ok(contracts);
     }
 
 

@@ -66,22 +66,19 @@ public class DocumentServiceImpl implements DocumentService {
                     String.format("%s/%s", senderInfo.getId(), UUID.randomUUID()), digitalSignatureSender);
 
 
-            DigitalSignature senderDigital = DigitalSignature.builder()
-                    .url(urlSignature)
-                    .userUUID(senderInfo.getId())
-                    .status(DocumentStatus.WAITING)
-                    .publicKey(senderInfo.getPublicKey())
-                    .build();
+            DigitalSignature senderDigital = new DigitalSignature(DocumentStatus.WAITING, urlSignature,
+                    senderInfo.getId(), senderInfo.getPublicKey());
+            senderDigital.setViewedDate(new Date());
+            senderDigital.setSignedDate(new Date());
 
             List<DigitalSignature> listDigitalSignature = generateDigitalSignatureReceiver(clientRequest.getReceivers());
             listDigitalSignature.add(senderDigital);
 
-            Contract contract = Contract.builder()
-                    .senderUUID(senderInfo.getId())
-                    .sentDate(new Date())
-                    .documents(documents)
-                    .digitalSignatures(listDigitalSignature)
-                    .build();
+            Contract contract = new Contract();
+            contract.setSenderUUID(senderInfo.getId());
+            contract.setSentDate(new Date());
+            contract.setDocuments(documents);
+            contract.setDigitalSignatures(listDigitalSignature);
 
             Contract savedContract = contractRepository.save(contract);
             // sent mail
@@ -127,7 +124,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void sendEmail(Contract contract, List<Receiver> receivers, String fullName) {
         receivers.forEach(receiver -> {
-            String url = String.format("%s%s/signing/?c=%s&r=%s",
+            String url = String.format("%s%s/apt/signing/?c=%s&r=%s",
                     hostname, contextPath,
                     contract.getId(), receiver.getId()
             );
@@ -142,10 +139,7 @@ public class DocumentServiceImpl implements DocumentService {
     private DigitalSignature getDigitalSignature(Receiver receiver) {
         LoginServerResponseDto user = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
         receiver.setId(user.getId());
-        return DigitalSignature.builder()
-                .userUUID(user.getId())
-                .status(DocumentStatus.ACTION_REQUIRE)
-                .publicKey(user.getPublicKey())
-                .build();
+        return new DigitalSignature(DocumentStatus.ACTION_REQUIRE, null,
+                user.getId(), user.getPublicKey());
     }
 }
