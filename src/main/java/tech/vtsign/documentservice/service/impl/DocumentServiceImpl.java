@@ -67,7 +67,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             Contract savedContract = contractRepository.save(contract);
             // sent mail
-            this.sendEmail(savedContract, clientRequest.getReceivers(), senderInfo.getFullName());
+            this.sendEmail(savedContract, clientRequest, senderInfo.getFullName());
 
         } catch (Exception ex) {
             success = false;
@@ -92,13 +92,14 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
-    public void sendEmail(Contract contract, List<Receiver> receivers, String fullName) {
-        receivers.forEach(receiver -> {
+    public void sendEmail(Contract contract,DocumentClientRequest clientRequest , String senderFullName) {
+        clientRequest.getReceivers().forEach(receiver -> {
             String url = String.format("%s%s/apt/signing/?c=%s&r=%s",
                     hostname, contextPath,
                     contract.getId(), receiver.getId()
             );
-            InfoMailReceiver infoMailReceiver = new InfoMailReceiver(receiver.getEmail(), url, fullName);
+            InfoMailReceiver infoMailReceiver =
+                    new InfoMailReceiver(receiver.getName(),receiver.getEmail(),receiver.getPrivateMessage(),clientRequest.getMailMessage(),clientRequest.getMailTitle(),url,senderFullName);
 
             documentProducer.sendMessage(infoMailReceiver);
         });

@@ -8,7 +8,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InfoMailReceiver {
+    private String name;
     private String email;
+    private String privateMessage;
+
+    private String mailMessage;
+    private String mailTitle;
     private String url;
-    private String nameSender;
+    private String senderName;
 }
