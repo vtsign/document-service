@@ -7,7 +7,7 @@ import tech.vtsign.documentservice.model.LoginServerResponseDto;
 
 @FeignClient(name = "user-service")
 public interface UserServiceProxy {
-    @GetMapping("/user/email")
+    @GetMapping("/user/apt/email")
     LoginServerResponseDto getOrCreateUser(@RequestParam String email, @RequestParam(required = false) String name);
 
 }

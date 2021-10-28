@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.DigitalSignature;
+import tech.vtsign.documentservice.domain.UserDocument;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
@@ -41,8 +41,8 @@ public class DocumentController {
     })
     @PostMapping(value = "/signing")
     public ResponseEntity<Boolean> signing(@RequestPart("data") DocumentClientRequest documentClientRequests,
-                                           @RequestPart List<MultipartFile> files) {
-        documentService.createDigitalSignature(documentClientRequests, files);
+                                           @RequestPart("files") List<MultipartFile> files) {
+        documentService.createUserDocument(documentClientRequests, files);
         return ResponseEntity.ok(true);
     }
 
@@ -63,7 +63,7 @@ public class DocumentController {
 
     @GetMapping("/contract")
     public ResponseEntity<?> findContractById(@RequestParam("id") UUID contractUUID) {
-        DigitalSignature signature = contractService.findContractById(contractUUID);
+        UserDocument signature = contractService.findContractById(contractUUID);
         return ResponseEntity.ok(signature);
     }
 

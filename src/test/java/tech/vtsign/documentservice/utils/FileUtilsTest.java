@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import tech.vtsign.documentservice.domain.DigitalSignature;
-import tech.vtsign.documentservice.repository.DigitalSignatureRepository;
+import tech.vtsign.documentservice.domain.UserDocument;
+import tech.vtsign.documentservice.repository.UserDocumentRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +16,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 @RequiredArgsConstructor
 public class FileUtilsTest {
-    private final DigitalSignatureRepository digitalSignatureRepository;
+    private final UserDocumentRepository userDocumentRepository;
 
     @Test
     void testReadFileFromURL() {
@@ -28,8 +28,8 @@ public class FileUtilsTest {
 
     @Test
     void testFindDigitalSignatureByIdAndStatus() {
-        List<DigitalSignature> digitalSignatureList = digitalSignatureRepository.findByUserUUIDAndStatus(UUID.fromString("1234"), "SEND");
-        System.out.println(digitalSignatureList);
-        assertThat(digitalSignatureList.size()).isGreaterThan(0);
+        List<UserDocument> userDocumentList = userDocumentRepository.findByUserUUIDAndStatus(UUID.fromString("1234"), "SEND");
+        System.out.println(userDocumentList);
+        assertThat(userDocumentList.size()).isGreaterThan(0);
     }
 }

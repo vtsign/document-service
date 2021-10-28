@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>tech.vtsign</groupId>
-    <artifactId>contract-service</artifactId>
+    <artifactId>document-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>contract-service</name>
-    <description>contract-service</description>
+    <name>document-service</name>
+    <description>document-service</description>
     <properties>
         <java.version>11</java.version>
         <spring-cloud.version>2020.0.3</spring-cloud.version>

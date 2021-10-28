@@ -1,8 +1,8 @@
 package tech.vtsign.documentservice.service;
 
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
+import tech.vtsign.documentservice.domain.UserDocument;
 import tech.vtsign.documentservice.model.DocumentStatus;
 
 import java.util.List;
@@ -11,9 +11,9 @@ import java.util.UUID;
 public interface ContractService {
     List<Document> getDocumentsByContractAndReceiver(UUID contractUUID, UUID receiverUUID);
 
-    DigitalSignature findContractById(UUID contractUUID);
+    UserDocument findContractById(UUID contractUUID);
 
-    DigitalSignature findContractByIdAndUserId(UUID contractUUID, UUID userUUID);
+    UserDocument findContractByIdAndUserId(UUID contractUUID, UUID userUUID);
 
     List<Contract> findAllTemplateByUserId(UUID userUUID, String status);
 

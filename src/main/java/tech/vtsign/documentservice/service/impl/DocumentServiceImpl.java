@@ -1,16 +1,14 @@
 package tech.vtsign.documentservice.service.impl;
 
-import com.google.common.primitives.Bytes;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.DigitalSignature;
 import tech.vtsign.documentservice.domain.Document;
+import tech.vtsign.documentservice.domain.UserDocument;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
@@ -18,11 +16,7 @@ import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
-import tech.vtsign.documentservice.utils.DSUtil;
-import tech.vtsign.documentservice.utils.FileUtil;
-import tech.vtsign.documentservice.utils.KeyReaderUtil;
 
-import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -43,42 +37,33 @@ public class DocumentServiceImpl implements DocumentService {
     private String contextPath = "/document";
 
     @Override
-    public boolean createDigitalSignature(DocumentClientRequest clientRequest, List<MultipartFile> files) {
+    public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
         boolean success = true;
 
         try {
             List<Document> documents = new ArrayList<>();
-            byte[] totalBytes = new byte[0];
             for (MultipartFile file : files) {
-                byte[] fileBytes = file.getBytes();
                 String urlDocument = this.uploadFile(
                         String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename()),
-                        fileBytes);
+                        file.getBytes());
                 Document document = new Document(urlDocument);
                 documents.add(document);
-                totalBytes = Bytes.concat(totalBytes, fileBytes);
             }
 
-            byte[] digitalSignatureSender = this.createSignatureByte(totalBytes, senderInfo.getPrivateKey());
-            String urlSignature = this.uploadFile(
-                    String.format("%s/%s", senderInfo.getId(), UUID.randomUUID()), digitalSignatureSender);
+            UserDocument userDocument = new UserDocument(DocumentStatus.WAITING, senderInfo.getId());
+            userDocument.setViewedDate(new Date());
+            userDocument.setSignedDate(new Date());
 
-
-            DigitalSignature senderDigital = new DigitalSignature(DocumentStatus.WAITING, urlSignature,
-                    senderInfo.getId(), senderInfo.getPublicKey());
-            senderDigital.setViewedDate(new Date());
-            senderDigital.setSignedDate(new Date());
-
-            List<DigitalSignature> listDigitalSignature = generateDigitalSignatureReceiver(clientRequest.getReceivers());
-            listDigitalSignature.add(senderDigital);
+            List<UserDocument> listUserDocument = generateListUserDocument(clientRequest.getReceivers());
+            listUserDocument.add(userDocument);
 
             Contract contract = new Contract();
             contract.setSenderUUID(senderInfo.getId());
             contract.setSentDate(new Date());
             contract.setDocuments(documents);
-            contract.setDigitalSignatures(listDigitalSignature);
+            contract.setUserDocuments(listUserDocument);
 
             Contract savedContract = contractRepository.save(contract);
             // sent mail
@@ -93,32 +78,17 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public byte[] createSignature(MultipartFile file, String privateKeyUrl) throws Exception {
-        byte[] privateKeyBytes = FileUtil.readByteFromURL(privateKeyUrl);
-        PrivateKey privateKey = KeyReaderUtil.getPrivateKey(privateKeyBytes);
-        return DSUtil.sign(file.getBytes(), privateKey);
-    }
-
-    @SneakyThrows
-    private byte[] createSignatureByte(byte[] file, String privateKeyUrl) throws Exception {
-        byte[] privateKeyBytes = FileUtil.readByteFromURL(privateKeyUrl);
-        PrivateKey privateKey = KeyReaderUtil.getPrivateKey(privateKeyBytes);
-        return DSUtil.sign(file, privateKey);
-    }
-
-    @Override
     public String uploadFile(String name, byte[] bytes) {
         return azureStorageService.uploadNotOverride(name, bytes);
     }
 
-    private List<DigitalSignature> generateDigitalSignatureReceiver(List<Receiver> receivers) {
-        //Tao
-        List<DigitalSignature> listDigitalSignature = new ArrayList<>();
+    private List<UserDocument> generateListUserDocument(List<Receiver> receivers) {
+        List<UserDocument> listUserDocument = new ArrayList<>();
         for (Receiver receiver : receivers) {
-            DigitalSignature userDS = getDigitalSignature(receiver);
-            listDigitalSignature.add(userDS);
+            UserDocument userDocument = getUserDocument(receiver);
+            listUserDocument.add(userDocument);
         }
-        return listDigitalSignature;
+        return listUserDocument;
     }
 
 
@@ -136,10 +106,9 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
-    private DigitalSignature getDigitalSignature(Receiver receiver) {
+    private UserDocument getUserDocument(Receiver receiver) {
         LoginServerResponseDto user = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
         receiver.setId(user.getId());
-        return new DigitalSignature(DocumentStatus.ACTION_REQUIRE, null,
-                user.getId(), user.getPublicKey());
+        return new UserDocument(DocumentStatus.ACTION_REQUIRE, user.getId());
     }
 }
