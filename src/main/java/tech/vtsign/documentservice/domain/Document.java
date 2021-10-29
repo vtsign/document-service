@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -27,8 +28,12 @@ public class Document {
     @JoinColumn(name = "contract_uuid")
     @JsonIgnore
     private Contract contract;
+    
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "document")
+    private List<XFDF> xfdfs;
 
     public Document(String url) {
         this.url = url;
     }
+    
 }

@@ -13,9 +13,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
+import tech.vtsign.documentservice.model.LoginServerResponseDto;
+import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.service.ContractService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RequestMapping("/apt")
@@ -24,6 +28,7 @@ import java.util.UUID;
 public class AcceptController {
 
     private final ContractService contractService;
+    private final UserServiceProxy userServiceProxy;
 
     @Operation(summary = "document")
     @ApiResponses(value = {
@@ -42,8 +47,13 @@ public class AcceptController {
     @GetMapping("/signing")
     public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId,
                                             @RequestParam("r") UUID receiverId) {
+        LoginServerResponseDto user = userServiceProxy.getUserById(receiverId);
         List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId, receiverId);
-        return ResponseEntity.ok(documents);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("user", user);
+        res.put("documents", documents);
+        return ResponseEntity.ok(res);
     }
 
 }

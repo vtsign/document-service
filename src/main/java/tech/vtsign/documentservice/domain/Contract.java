@@ -26,6 +26,9 @@ public class Contract {
     private UUID senderUUID;
     @JsonProperty("sent_date")
     private Date sentDate;
+    private boolean signed;
+    @JsonProperty("sent_date")
+    private Date completeDate;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
