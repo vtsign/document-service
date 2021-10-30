@@ -12,6 +12,7 @@ import tech.vtsign.documentservice.domain.UserDocument;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
+import tech.vtsign.documentservice.repository.DocumentRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentProducer;
@@ -30,6 +31,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserServiceProxy userServiceProxy;
     private final ContractRepository contractRepository;
     private final DocumentProducer documentProducer;
+    private final DocumentRepository documentRepository;
 
     @Value("${tech.vtsign.hostname}")
     private String hostname = "http://localhost/";
@@ -111,5 +113,10 @@ public class DocumentServiceImpl implements DocumentService {
         LoginServerResponseDto user = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
         receiver.setId(user.getId());
         return new UserDocument(DocumentStatus.ACTION_REQUIRE, user.getId());
+    }
+
+    @Override
+    public Document getById(UUID uuid) {
+        return documentRepository.getById(uuid);
     }
 }

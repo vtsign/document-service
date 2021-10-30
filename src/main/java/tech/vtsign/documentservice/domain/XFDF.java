@@ -20,7 +20,11 @@ public class XFDF {
     @Column(columnDefinition = "TEXT")
     private String xfdf;
 
-    
+    public XFDF(String xfdf) {
+        this.xfdf = xfdf;
+    }
+
+
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "document_uuid")
     @JsonIgnore
