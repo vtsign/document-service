@@ -25,7 +25,6 @@ public class LoginServerResponseDto {
     private boolean blocked;
     private List<Role> roles;
     private List<Permission> permissions;
-    private List<Signature> signatures;
 
     public String getFullName() {
         return firstName + " " + lastName;
