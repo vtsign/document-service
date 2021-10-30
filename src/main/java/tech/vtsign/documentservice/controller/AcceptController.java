@@ -72,7 +72,7 @@ public class AcceptController {
     public ResponseEntity<?> signByReceiver(@RequestBody SignContractByReceiver u) {
         UserDocument userDocument = contractService.findContractByIdAndUserId(u.getContractId(), u.getUserId());
 
-        if (!userDocument.getStatus().equals(DocumentStatus.SIGNED)) {
+        if (userDocument.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
             userDocument.setSignedDate(new Date());
             userDocument.setStatus(DocumentStatus.SIGNED);
 
