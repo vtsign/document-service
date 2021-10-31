@@ -2,6 +2,7 @@ package tech.vtsign.documentservice.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,12 +24,16 @@ public class Document {
     @Column(name = "document_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
     private String url;
+    @JsonProperty("origin_name")
+    private String originName;
+    @JsonProperty("save_name")
+    private String saveName;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     @JsonIgnore
     private Contract contract;
-    
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "document")
     private List<XFDF> xfdfs;
 

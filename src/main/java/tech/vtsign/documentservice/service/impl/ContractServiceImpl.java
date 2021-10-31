@@ -66,4 +66,9 @@ public class ContractServiceImpl implements ContractService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Contract getContractById(UUID id) {
+        return contractRepository.getById(id);
+    }
+
 }

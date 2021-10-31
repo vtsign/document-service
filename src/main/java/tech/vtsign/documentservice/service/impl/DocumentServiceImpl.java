@@ -47,10 +47,11 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             List<Document> documents = new ArrayList<>();
             for (MultipartFile file : files) {
-                String urlDocument = this.uploadFile(
-                        String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename()),
-                        file.getBytes());
+                String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
+                String urlDocument = this.uploadFile(saveName, file.getBytes());
                 Document document = new Document(urlDocument);
+                document.setOriginName(file.getOriginalFilename());
+                document.setSaveName(saveName);
                 documents.add(document);
             }
 

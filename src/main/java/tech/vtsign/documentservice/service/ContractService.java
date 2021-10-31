@@ -44,4 +44,6 @@ public interface ContractService {
     default List<Contract> findAllTemplateHiddenByUserId(UUID userUUID) {
         return findAllTemplateByUserId(userUUID, DocumentStatus.HIDDEN);
     }
+
+    Contract getContractById(UUID id);
 }
