@@ -97,8 +97,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void sendEmail(Contract contract,DocumentClientRequest clientRequest , String senderFullName) {
         clientRequest.getReceivers().forEach(receiver -> {
-            String url = String.format("%s%s/apt/signing/?c=%s&r=%s",
-                    hostname, contextPath,
+            String url = String.format("%s/signDocument?c=%s&r=%s",
+                    hostname,
                     contract.getId(), receiver.getId()
             );
             InfoMailReceiver infoMailReceiver =
