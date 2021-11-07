@@ -37,5 +37,5 @@ public class Contract {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     @JsonIgnore
-    private List<UserDocument> userDocuments;
+    private List<UserContract> userContracts;
 }

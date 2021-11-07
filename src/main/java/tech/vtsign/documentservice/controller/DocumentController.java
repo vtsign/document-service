@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.UserDocument;
+import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
@@ -63,7 +63,7 @@ public class DocumentController {
 
     @GetMapping("/contract")
     public ResponseEntity<?> findContractById(@RequestParam("id") UUID contractUUID) {
-        UserDocument signature = contractService.findContractById(contractUUID);
+        UserContract signature = contractService.findContractById(contractUUID);
         return ResponseEntity.ok(signature);
     }
 

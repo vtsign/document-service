@@ -1,6 +1,8 @@
 package tech.vtsign.documentservice.domain;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,29 +15,34 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "user_document")
 @NoArgsConstructor
-public class UserDocument {
+@Table(name = "user_contract")
+@AllArgsConstructor
+public class UserContract {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(name = "user_document_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
+    @Column(name = "user_contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
     private String status;
-    @Column(name = "user_uuid", columnDefinition = "BINARY(16)")
-    @JsonProperty("user_uuid")
-    private UUID userUUID;
+    private String permission;
+    private String secretKey;
     @JsonProperty("viewed_date")
     private Date viewedDate;
     @JsonProperty("signed_date")
     private Date signedDate;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     private Contract contract;
 
-    public UserDocument(String status, UUID userUUID) {
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_uuid")
+    private User user;
+
+    public UserContract(String status, User user) {
         this.status = status;
-        this.userUUID = userUUID;
+        this.user = user;
     }
 
 }

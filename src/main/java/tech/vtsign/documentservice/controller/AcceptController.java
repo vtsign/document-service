@@ -12,13 +12,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.Document;
-import tech.vtsign.documentservice.domain.UserDocument;
+import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.domain.XFDF;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.model.DocumentStatus;
-import tech.vtsign.documentservice.model.LoginServerResponseDto;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
-import tech.vtsign.documentservice.model.UserDocumentResponse;
+import tech.vtsign.documentservice.model.UserContractResponse;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.ContractService;
@@ -46,7 +45,7 @@ public class AcceptController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = UserDocumentResponse.class))
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = UserContractResponse.class))
                     }
             ),
             @ApiResponse(responseCode = "403", description = "Forbidden you don't have permission to signing this contract",
@@ -57,23 +56,16 @@ public class AcceptController {
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
+            @ApiResponse(responseCode = "423", description = "Contract was signed by this user",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @GetMapping("/signing")
     public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId,
                                             @RequestParam("r") UUID receiverId) {
-        LoginServerResponseDto user = userServiceProxy.getUserById(receiverId);
-        List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId, receiverId);
-        UserDocumentResponse userDocumentResponse = new UserDocumentResponse();
-
-        Contract contract = contractService.getContractById(contractId);
-        boolean lastSign = contract.getUserDocuments().stream()
-                .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
-                .count() == contract.getUserDocuments().size() - 2;
-
-        userDocumentResponse.setUser(user);
-        userDocumentResponse.setDocuments(documents);
-        userDocumentResponse.setLastSign(lastSign);
-        return ResponseEntity.ok(userDocumentResponse);
+        UserContractResponse userContractResponse = documentService.getUDRByContractIdAndUserId(contractId, receiverId);
+        return ResponseEntity.ok(userContractResponse);
     }
 
 
@@ -87,11 +79,11 @@ public class AcceptController {
     @Transactional
     public ResponseEntity<?> signByReceiver(@RequestPart(name = "signed") SignContractByReceiver u,
                                             @RequestPart(required = false, name = "documents") List<MultipartFile> documents) throws IOException {
-        UserDocument userDocument = contractService.findContractByIdAndUserId(u.getContractId(), u.getUserId());
+        UserContract userContract = contractService.findContractByIdAndUserId(u.getContractId(), u.getUserId());
 
-        if (userDocument.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
-            userDocument.setSignedDate(new Date());
-            userDocument.setStatus(DocumentStatus.SIGNED);
+        if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
+            userContract.setSignedDate(new Date());
+            userContract.setStatus(DocumentStatus.SIGNED);
 
             // add xfdf for each document
             u.getDocumentXFDFS().forEach(documentXFDF -> {
@@ -103,15 +95,15 @@ public class AcceptController {
 
             // update contract status
 
-            Contract contract = userDocument.getContract();
-            boolean completed = contract.getUserDocuments().stream()
+            Contract contract = userContract.getContract();
+            boolean completed = contract.getUserContracts().stream()
                     .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
-                    .count() == contract.getUserDocuments().size() - 1;
+                    .count() == contract.getUserContracts().size() - 1;
 
             if (completed) {
                 contract.setSigned(true);
                 contract.setCompleteDate(new Date());
-                contract.getUserDocuments().forEach(ud -> {
+                contract.getUserContracts().forEach(ud -> {
                     ud.setStatus(DocumentStatus.COMPLETED);
                 });
             }

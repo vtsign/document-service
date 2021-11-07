@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDocumentResponse {
+public class UserContractResponse {
     @JsonProperty("documents")
     private List<Document> documents = new ArrayList<>();
     @JsonProperty("user")

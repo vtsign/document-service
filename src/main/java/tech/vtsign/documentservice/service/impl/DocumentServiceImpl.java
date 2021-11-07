@@ -8,20 +8,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.Document;
-import tech.vtsign.documentservice.domain.UserDocument;
+import tech.vtsign.documentservice.domain.User;
+import tech.vtsign.documentservice.domain.UserContract;
+import tech.vtsign.documentservice.exception.NotFoundException;
+import tech.vtsign.documentservice.exception.SignedException;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.DocumentRepository;
+import tech.vtsign.documentservice.repository.UserDocumentRepository;
+import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
+import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +35,17 @@ public class DocumentServiceImpl implements DocumentService {
     private final ContractRepository contractRepository;
     private final DocumentProducer documentProducer;
     private final DocumentRepository documentRepository;
+    private final ContractService contractService;
+    private final UserDocumentRepository userDocumentRepository;
+    private final UserRepository userRepository;
+
 
     @Value("${tech.vtsign.hostname}")
     private String hostname = "http://localhost/";
     @Value("${server.servlet.context-path}")
     private String contextPath = "/document";
+    @Value("${tech.vtsign.kafka.document-service.notify-sign}")
+    private String TOPIC_SIGN;
 
     @Override
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
@@ -54,19 +63,21 @@ public class DocumentServiceImpl implements DocumentService {
                 document.setSaveName(saveName);
                 documents.add(document);
             }
+            User user = new User();
+            user.setId(senderInfo.getId());
+            user.setEmail(senderInfo.getEmail());
+            UserContract userContract = new UserContract(DocumentStatus.WAITING, user);
+            userContract.setViewedDate(new Date());
+            userContract.setSignedDate(new Date());
 
-            UserDocument userDocument = new UserDocument(DocumentStatus.WAITING, senderInfo.getId());
-            userDocument.setViewedDate(new Date());
-            userDocument.setSignedDate(new Date());
-
-            List<UserDocument> listUserDocument = generateListUserDocument(clientRequest.getReceivers());
-            listUserDocument.add(userDocument);
+            List<UserContract> listUserContract = generateListUserDocument(clientRequest.getReceivers());
+            listUserContract.add(userContract);
 
             Contract contract = new Contract();
             contract.setSenderUUID(senderInfo.getId());
             contract.setSentDate(new Date());
             contract.setDocuments(documents);
-            contract.setUserDocuments(listUserDocument);
+            contract.setUserContracts(listUserContract);
 
             Contract savedContract = contractRepository.save(contract);
             // sent mail
@@ -85,39 +96,75 @@ public class DocumentServiceImpl implements DocumentService {
         return azureStorageService.uploadNotOverride(name, bytes);
     }
 
-    private List<UserDocument> generateListUserDocument(List<Receiver> receivers) {
-        List<UserDocument> listUserDocument = new ArrayList<>();
+    private List<UserContract> generateListUserDocument(List<Receiver> receivers) {
+        List<UserContract> listUserContract = new ArrayList<>();
         for (Receiver receiver : receivers) {
-            UserDocument userDocument = getUserDocument(receiver);
-            listUserDocument.add(userDocument);
+            UserContract userContract = getUserDocument(receiver);
+            listUserContract.add(userContract);
         }
-        return listUserDocument;
+        return listUserContract;
     }
 
 
-    public void sendEmail(Contract contract,DocumentClientRequest clientRequest , String senderFullName) {
+    public void sendEmail(Contract contract, DocumentClientRequest clientRequest, String senderFullName) {
         clientRequest.getReceivers().forEach(receiver -> {
             String url = String.format("%s/signDocument?c=%s&r=%s",
                     hostname,
                     contract.getId(), receiver.getId()
             );
             InfoMailReceiver infoMailReceiver =
-                    new InfoMailReceiver(receiver.getName(),receiver.getEmail(),receiver.getPrivateMessage(),clientRequest.getMailMessage(),clientRequest.getMailTitle(),url,senderFullName);
+                    new InfoMailReceiver(receiver.getName(), receiver.getEmail(), receiver.getPrivateMessage(), clientRequest.getMailMessage(), clientRequest.getMailTitle(), url, senderFullName);
 
-            documentProducer.sendMessage(infoMailReceiver);
+            documentProducer.sendMessage(infoMailReceiver, TOPIC_SIGN);
         });
 
 
     }
 
-    private UserDocument getUserDocument(Receiver receiver) {
-        LoginServerResponseDto user = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
-        receiver.setId(user.getId());
-        return new UserDocument(DocumentStatus.ACTION_REQUIRE, user.getId());
+    private UserContract getUserDocument(Receiver receiver) {
+        LoginServerResponseDto userReceiver = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getName());
+        receiver.setId(userReceiver.getId());
+        User user = new User();
+        user.setId(userReceiver.getId());
+        user.setEmail(receiver.getEmail());
+        return new UserContract(DocumentStatus.ACTION_REQUIRE, user);
     }
 
     @Override
     public Document getById(UUID uuid) {
         return documentRepository.getById(uuid);
+    }
+
+    @Override
+    public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID) {
+        LoginServerResponseDto user = userServiceProxy.getUserById(userUUID);
+        List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId, userUUID);
+//        UserContract userContract = userDocumentRepository.findByUserUUIDAndContractId(userUUID,contractId);
+        Optional<User> opt = userRepository.findById(userUUID);
+        UserContract userContract = new UserContract();
+        if (opt.isPresent()) {
+            User userL = opt.get();
+            List<UserContract> userContracts = userL.getUserContracts();
+            Optional<UserContract> optContract = userContracts.stream().filter(u -> u.getContract().getId().equals(contractId)).findFirst();
+            userContract = optContract.orElseThrow(() -> new NotFoundException("Not found contract"));
+
+        }
+        if (userContract.getStatus().equals(DocumentStatus.SIGNED))
+            throw new SignedException("A Contract was signed by this User");
+
+        UserContractResponse userContractResponse = new UserContractResponse();
+
+        Contract contract = contractService.getContractById(contractId);
+        boolean lastSign = contract.getUserContracts().stream()
+                .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
+                .count() == contract.getUserContracts().size() - 2;
+        InfoMailReceiver info = new InfoMailReceiver();
+        info.setName(user.getFullName());
+//        info.setEmail();
+//        documentProducer.sendMessage();
+        userContractResponse.setUser(user);
+        userContractResponse.setDocuments(documents);
+        userContractResponse.setLastSign(lastSign);
+        return userContractResponse;
     }
 }
