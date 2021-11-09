@@ -18,10 +18,8 @@ import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.ContractService;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.sql.Array;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -81,7 +79,10 @@ public class ContractServiceImpl implements ContractService {
                     .collect(Collectors.toList());
 
         }
-        throw new NotFoundException("User Not Found");
+        else{
+            return new ArrayList<>();
+        }
+
     }
 
     @Override
