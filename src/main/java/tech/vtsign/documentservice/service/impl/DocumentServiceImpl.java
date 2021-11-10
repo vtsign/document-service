@@ -63,25 +63,44 @@ public class DocumentServiceImpl implements DocumentService {
                 document.setSaveName(saveName);
                 documents.add(document);
             }
+
+
             User user = new User();
             user.setId(senderInfo.getId());
             user.setEmail(senderInfo.getEmail());
-            UserContract userContract = new UserContract(DocumentStatus.WAITING, user);
+
+            Contract contract = new Contract();
+//            contract.setSenderUUID(senderInfo.getId());
+            contract.setSentDate(new Date());
+            contract.setDocuments(documents);
+
+            UserContract userContract = new UserContract();
+            userContract.setId(UUID.randomUUID());
+            userContract.setStatus(DocumentStatus.WAITING);
             userContract.setViewedDate(new Date());
             userContract.setSignedDate(new Date());
 
-            List<UserContract> listUserContract = generateListUserDocument(clientRequest.getReceivers());
-            listUserContract.add(userContract);
+            userContract.setUser(user);
+            userContract.setContract(contract);
 
-            Contract contract = new Contract();
-            contract.setSenderUUID(senderInfo.getId());
-            contract.setSentDate(new Date());
-            contract.setDocuments(documents);
-            contract.setUserContracts(listUserContract);
 
-            Contract savedContract = contractRepository.save(contract);
-            // sent mail
-            this.sendEmail(savedContract, clientRequest, senderInfo.getFullName());
+
+            UserContract userContractSaved =  userDocumentRepository.save(userContract);
+            for (Receiver receiver : clientRequest.getReceivers()) {
+                UserContract userContractTemp = this.getUserDocument(receiver);
+                userContractTemp.setContract(contract);
+////            UserContract
+                userDocumentRepository.save(userContractTemp);
+            }
+
+//            List<UserContract> listUserContract = generateListUserDocument(clientRequest.getReceivers(),contract);
+//            listUserContract.add(userContract);
+
+
+
+//            Contract savedContract = contractRepository.save(contract);
+//            // sent mail
+            this.sendEmail(userContractSaved.getContract(), clientRequest, senderInfo.getFullName());
 
         } catch (Exception ex) {
             success = false;
@@ -96,10 +115,13 @@ public class DocumentServiceImpl implements DocumentService {
         return azureStorageService.uploadNotOverride(name, bytes);
     }
 
-    private List<UserContract> generateListUserDocument(List<Receiver> receivers) {
+    private List<UserContract> generateListUserDocument(List<Receiver> receivers, Contract contract) {
         List<UserContract> listUserContract = new ArrayList<>();
         for (Receiver receiver : receivers) {
             UserContract userContract = getUserDocument(receiver);
+            userContract.setContract(contract);
+//            UserContract
+            userDocumentRepository.save(userContract);
             listUserContract.add(userContract);
         }
         return listUserContract;
@@ -127,7 +149,11 @@ public class DocumentServiceImpl implements DocumentService {
         User user = new User();
         user.setId(userReceiver.getId());
         user.setEmail(receiver.getEmail());
-        return new UserContract(DocumentStatus.ACTION_REQUIRE, user);
+        UserContract userContract = new UserContract();
+        userContract.setId(UUID.randomUUID());
+        userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
+        userContract.setUser(user);
+        return userContract;
     }
 
     @Override
@@ -144,7 +170,7 @@ public class DocumentServiceImpl implements DocumentService {
         UserContract userContract = new UserContract();
         if (opt.isPresent()) {
             User userL = opt.get();
-            List<UserContract> userContracts = userL.getUserContracts();
+            Set<UserContract> userContracts = userL.getUserContracts();
             Optional<UserContract> optContract = userContracts.stream().filter(u -> u.getContract().getId().equals(contractId)).findFirst();
             userContract = optContract.orElseThrow(() -> new NotFoundException("Not found contract"));
 

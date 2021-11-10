@@ -60,7 +60,7 @@ public class ContractServiceImpl implements ContractService {
         Optional<User> opt = userRepository.findById(userUUID);
         if (opt.isPresent()) {
             User user = opt.get();
-            List<UserContract> userContracts = user.getUserContracts();
+            Set<UserContract> userContracts = user.getUserContracts();
             Optional<UserContract> optContract = userContracts.stream().filter(u -> u.getContract().getId().equals(contractUUID)).findFirst();
             UserContract userContract = optContract.orElseThrow(() -> new NotFoundException("Not found contract"));
             return userContract;
@@ -71,17 +71,17 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public List<Contract> findAllTemplateByUserId(UUID userUUID, String status) {
         Optional<User> opt = userRepository.findById(userUUID);
+        List<Contract> contracts =new ArrayList<>();
         if (opt.isPresent()) {
             User user = opt.get();
-            List<UserContract> userContracts = user.getUserContracts();
-            return userContracts.stream().filter(u -> u.getStatus().equals(status))
-                    .map(UserContract::getContract)
+            Set<UserContract> userContracts = user.getUserContracts();
+            System.out.println(userContracts.size());
+             contracts = userContracts.stream().filter(u -> u.getStatus().equals(status))
+                     .map(userContract -> userContract.getContract())
                     .collect(Collectors.toList());
 
         }
-        else{
-            return new ArrayList<>();
-        }
+        return contracts;
 
     }
 

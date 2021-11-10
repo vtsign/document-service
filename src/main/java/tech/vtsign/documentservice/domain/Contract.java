@@ -9,11 +9,10 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
-@NoArgsConstructor
 public class Contract {
     @Id
     @GeneratedValue(generator = "uuid2")
@@ -21,21 +20,70 @@ public class Contract {
     @Column(name = "contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "sender_uuid", columnDefinition = "BINARY(16)")
-    @JsonProperty("sender_uuid")
-    private UUID senderUUID;
+//    @Column(name = "sender_uuid", columnDefinition = "BINARY(16)")
+//    @JsonProperty("sender_uuid")
+//    private UUID senderUUID;
     @JsonProperty("sent_date")
     private Date sentDate;
     private boolean signed;
-    @JsonProperty("sent_date")
+    @JsonProperty("complete_date")
     private Date completeDate;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     private List<Document> documents;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "contract_uuid")
+    @OneToMany(mappedBy = "contract")
     @JsonIgnore
-    private List<UserContract> userContracts;
+    private Set<UserContract> userContracts;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+
+
+    public Date getSentDate() {
+        return sentDate;
+    }
+
+    public void setSentDate(Date sentDate) {
+        this.sentDate = sentDate;
+    }
+
+    public boolean isSigned() {
+        return signed;
+    }
+
+    public void setSigned(boolean signed) {
+        this.signed = signed;
+    }
+
+    public Date getCompleteDate() {
+        return completeDate;
+    }
+
+    public void setCompleteDate(Date completeDate) {
+        this.completeDate = completeDate;
+    }
+
+    public List<Document> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<Document> documents) {
+        this.documents = documents;
+    }
+
+    public Set<UserContract> getUserContracts() {
+        return userContracts;
+    }
+
+    public void setUserContracts(Set<UserContract> userContracts) {
+        this.userContracts = userContracts;
+    }
 }

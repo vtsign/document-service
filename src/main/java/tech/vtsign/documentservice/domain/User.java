@@ -1,34 +1,64 @@
 package tech.vtsign.documentservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
     @Id
-
-    @Column(name = "user_id", unique = true, updatable = false, columnDefinition = "BINARY(16)")
+    @Column(name = "user_uuid", unique = true, updatable = false,columnDefinition = "BINARY(16)")
     private UUID id;
-    //    @Email
     private String email;
-    @JsonProperty("first_name")
-    private String firstName;
-    @JsonProperty("last_name")
-    private String lastName;
     private String phone;
-    @JsonProperty("temp_account")
-    private boolean tempAccount;
+    @OneToMany(mappedBy = "user")
+    private Set<UserContract> userContracts;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_uuid")
-    private List<UserContract> userContracts;
+    public User() {
+    }
+
+    public User(UUID id, String email, String phone, Set<UserContract> userContracts) {
+        this.id = id;
+        this.email = email;
+        this.phone = phone;
+        this.userContracts = userContracts;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public Set<UserContract> getUserContracts() {
+        return userContracts;
+    }
+
+    public void setUserContracts(Set<UserContract> userContracts) {
+        this.userContracts = userContracts;
+    }
 }
