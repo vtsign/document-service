@@ -18,7 +18,6 @@ import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.ContractService;
 
-import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +38,7 @@ public class ContractServiceImpl implements ContractService {
             throw new BadRequestException("Not found contract");
         } else {
             Contract contract = opt.get();
+            System.out.println(contract.getUserContracts().size());
             Optional<UserContract> userDocumentOptional = contract.getUserContracts().stream()
                     .filter(userContract -> userContract.getUser().getId().equals(receiverId))
                     .findFirst();
@@ -71,13 +71,12 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public List<Contract> findAllTemplateByUserId(UUID userUUID, String status) {
         Optional<User> opt = userRepository.findById(userUUID);
-        List<Contract> contracts =new ArrayList<>();
+        List<Contract> contracts = new ArrayList<>();
         if (opt.isPresent()) {
             User user = opt.get();
             Set<UserContract> userContracts = user.getUserContracts();
-            System.out.println(userContracts.size());
-             contracts = userContracts.stream().filter(u -> u.getStatus().equals(status))
-                     .map(userContract -> userContract.getContract())
+            contracts = userContracts.stream().filter(u -> u.getStatus().equals(status))
+                    .map(userContract -> userContract.getContract())
                     .collect(Collectors.toList());
 
         }

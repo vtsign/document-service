@@ -40,5 +40,5 @@ public class Document {
     public Document(String url) {
         this.url = url;
     }
-    
+
 }

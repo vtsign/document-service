@@ -68,34 +68,32 @@ public class DocumentServiceImpl implements DocumentService {
             User user = new User();
             user.setId(senderInfo.getId());
             user.setEmail(senderInfo.getEmail());
+            User userSenderSaved = userRepository.save(user);
 
             Contract contract = new Contract();
-//            contract.setSenderUUID(senderInfo.getId());
+            contract.setSenderUUID(senderInfo.getId());
             contract.setSentDate(new Date());
             contract.setDocuments(documents);
+            Contract contractSaved = contractRepository.save(contract);
 
             UserContract userContract = new UserContract();
-            userContract.setId(UUID.randomUUID());
+//            userContract.setId(UUID.randomUUID());
             userContract.setStatus(DocumentStatus.WAITING);
             userContract.setViewedDate(new Date());
             userContract.setSignedDate(new Date());
 
-            userContract.setUser(user);
-            userContract.setContract(contract);
+            userContract.setUser(userSenderSaved);
+            userContract.setContract(contractSaved);
+            UserContract userContractSaved = userDocumentRepository.save(userContract);
 
-
-
-            UserContract userContractSaved =  userDocumentRepository.save(userContract);
             for (Receiver receiver : clientRequest.getReceivers()) {
                 UserContract userContractTemp = this.getUserDocument(receiver);
-                userContractTemp.setContract(contract);
-////            UserContract
+                userContractTemp.setContract(contractSaved);
                 userDocumentRepository.save(userContractTemp);
             }
 
 //            List<UserContract> listUserContract = generateListUserDocument(clientRequest.getReceivers(),contract);
 //            listUserContract.add(userContract);
-
 
 
 //            Contract savedContract = contractRepository.save(contract);
@@ -149,10 +147,12 @@ public class DocumentServiceImpl implements DocumentService {
         User user = new User();
         user.setId(userReceiver.getId());
         user.setEmail(receiver.getEmail());
+        User userSaved = userRepository.save(user);
+
         UserContract userContract = new UserContract();
-        userContract.setId(UUID.randomUUID());
+//        userContract.setId(UUID.randomUUID());
         userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
-        userContract.setUser(user);
+        userContract.setUser(userSaved);
         return userContract;
     }
 
