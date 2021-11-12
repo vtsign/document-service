@@ -7,10 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class InfoMailReceiver {
-    private String name;
-    private String email;
-    private String privateMessage;
+public class ReceiverContract {
+    private Receiver receiver;
 
     private String mailMessage;
     private String mailTitle;

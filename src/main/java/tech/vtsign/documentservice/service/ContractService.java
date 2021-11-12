@@ -1,9 +1,10 @@
 package tech.vtsign.documentservice.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
-import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.domain.UserContract;
-import tech.vtsign.documentservice.model.DocumentStatus;
+import tech.vtsign.documentservice.model.SignContractByReceiver;
+import tech.vtsign.documentservice.model.UserContractResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,35 +16,10 @@ public interface ContractService {
 
     UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID);
 
-    List<Contract> findAllTemplateByUserId(UUID userUUID, String status);
+    List<Contract> findContractsByUserIdAndStatus(UUID userUUID, String status);
 
-    default List<Contract> findAllTemplateDraftByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.DRAFT);
-    }
-
-    default List<Contract> findAllTemplateActionRequireByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.ACTION_REQUIRE);
-    }
-
-    default List<Contract> findAllTemplateWaitingByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.WAITING);
-    }
-
-    default List<Contract> findAllTemplateCompletedByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.COMPLETED);
-    }
-
-    default List<Contract> findAllTemplateSentByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.SENT);
-    }
-
-    default List<Contract> findAllTemplateDeletedByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.DELETED);
-    }
-
-    default List<Contract> findAllTemplateHiddenByUserId(UUID userUUID) {
-        return findAllTemplateByUserId(userUUID, DocumentStatus.HIDDEN);
-    }
 
     Contract getContractById(UUID id);
+    UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
+    Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents);
 }

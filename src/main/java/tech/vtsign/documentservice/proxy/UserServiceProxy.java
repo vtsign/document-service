@@ -10,7 +10,7 @@ import java.util.UUID;
 @FeignClient(name = "user-service")
 public interface UserServiceProxy {
     @GetMapping("/user/apt/email")
-    LoginServerResponseDto getOrCreateUser(@RequestParam String email, @RequestParam(required = false) String name);
+    LoginServerResponseDto getOrCreateUser(@RequestParam String email, @RequestParam(required = false) String phone, @RequestParam(required = false) String name);
 
     @GetMapping("/user/apt/uuid")
     LoginServerResponseDto getUserById(@RequestParam("user_uuid") UUID uuid);
