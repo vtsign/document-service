@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ContractService {
-    List<Document> getDocumentsByContractAndReceiver(UUID contractUUID, UUID receiverUUID);
+    Contract findContractByContractAndReceiver(UUID contractUUID, UUID receiverUUID);
 
     UserContract findContractById(UUID contractUUID);
 
-    UserContract findContractByIdAndUserId(UUID contractUUID, UUID userUUID);
+    UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID);
 
     List<Contract> findAllTemplateByUserId(UUID userUUID, String status);
 

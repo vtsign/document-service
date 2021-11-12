@@ -10,6 +10,7 @@ import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
+import tech.vtsign.documentservice.exception.LockedException;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.exception.SignedException;
 import tech.vtsign.documentservice.model.*;
@@ -24,6 +25,7 @@ import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
 
+import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
@@ -54,6 +56,7 @@ public class DocumentServiceImpl implements DocumentService {
         boolean success = true;
 
         try {
+            List<UserContract> userContracts = new ArrayList<>();
             List<Document> documents = new ArrayList<>();
             for (MultipartFile file : files) {
                 String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
@@ -71,6 +74,7 @@ public class DocumentServiceImpl implements DocumentService {
             User userSenderSaved = userRepository.save(user);
 
             Contract contract = new Contract();
+            contract.setTitle(clientRequest.getMailTitle());
             contract.setSenderUUID(senderInfo.getId());
             contract.setSentDate(new Date());
             contract.setDocuments(documents);
@@ -84,21 +88,18 @@ public class DocumentServiceImpl implements DocumentService {
 
             userContract.setUser(userSenderSaved);
             userContract.setContract(contractSaved);
-            UserContract userContractSaved = userDocumentRepository.save(userContract);
+            userContracts.add(userContract);
 
             for (Receiver receiver : clientRequest.getReceivers()) {
                 UserContract userContractTemp = this.getUserDocument(receiver);
                 userContractTemp.setContract(contractSaved);
-                userDocumentRepository.save(userContractTemp);
+                userContractTemp.setPermission(receiver.getPermission());
+                userContractTemp.setSecretKey(receiver.getKey());
+                userContracts.add(userContractTemp);
             }
-
-//            List<UserContract> listUserContract = generateListUserDocument(clientRequest.getReceivers(),contract);
-//            listUserContract.add(userContract);
-
-
-//            Contract savedContract = contractRepository.save(contract);
-//            // sent mail
-            this.sendEmail(userContractSaved.getContract(), clientRequest, senderInfo.getFullName());
+            userDocumentRepository.saveAll(userContracts);
+//
+            this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
 
         } catch (Exception ex) {
             success = false;
@@ -126,7 +127,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
-    public void sendEmail(Contract contract, DocumentClientRequest clientRequest, String senderFullName) {
+    public void sendMail(Object object, String topic) {
+        documentProducer.sendMessage(object, topic);
+    }
+
+    public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderFullName) {
         clientRequest.getReceivers().forEach(receiver -> {
             String url = String.format("%s/signDocument?c=%s&r=%s",
                     hostname,
@@ -135,7 +140,7 @@ public class DocumentServiceImpl implements DocumentService {
             InfoMailReceiver infoMailReceiver =
                     new InfoMailReceiver(receiver.getName(), receiver.getEmail(), receiver.getPrivateMessage(), clientRequest.getMailMessage(), clientRequest.getMailTitle(), url, senderFullName);
 
-            documentProducer.sendMessage(infoMailReceiver, TOPIC_SIGN);
+            this.sendMail(infoMailReceiver, TOPIC_SIGN);
         });
 
 
@@ -150,7 +155,6 @@ public class DocumentServiceImpl implements DocumentService {
         User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
-//        userContract.setId(UUID.randomUUID());
         userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
         userContract.setUser(userSaved);
         return userContract;
@@ -161,36 +165,37 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.getById(uuid);
     }
 
+    @Transactional
     @Override
-    public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID) {
+    public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
         LoginServerResponseDto user = userServiceProxy.getUserById(userUUID);
-        List<Document> documents = contractService.getDocumentsByContractAndReceiver(contractId, userUUID);
-//        UserContract userContract = userDocumentRepository.findByUserUUIDAndContractId(userUUID,contractId);
-        Optional<User> opt = userRepository.findById(userUUID);
-        UserContract userContract = new UserContract();
-        if (opt.isPresent()) {
-            User userL = opt.get();
-            Set<UserContract> userContracts = userL.getUserContracts();
-            Optional<UserContract> optContract = userContracts.stream().filter(u -> u.getContract().getId().equals(contractId)).findFirst();
-            userContract = optContract.orElseThrow(() -> new NotFoundException("Not found contract"));
+        UserContract userContract = contractService.findUserContractByIdAndUserId(contractId, userUUID);
 
+        if (!userContract.getSecretKey().equals(secretKey)) {
+            throw new LockedException("Secret Key does not match");
         }
+        Contract contract = userContract.getContract();
+        Optional<User> contractOwnerOpt = userRepository.findById(contract.getSenderUUID());
+        User contractOwner = contractOwnerOpt.orElseThrow(() -> new NotFoundException("Not found user"));
         if (userContract.getStatus().equals(DocumentStatus.SIGNED))
             throw new SignedException("A Contract was signed by this User");
-
         UserContractResponse userContractResponse = new UserContractResponse();
 
-        Contract contract = contractService.getContractById(contractId);
         boolean lastSign = contract.getUserContracts().stream()
                 .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
                 .count() == contract.getUserContracts().size() - 2;
-        InfoMailReceiver info = new InfoMailReceiver();
-        info.setName(user.getFullName());
-//        info.setEmail();
-//        documentProducer.sendMessage();
+        if (userContract.getViewedDate() == null) {
+            userContract.setViewedDate(new Date());
+            InfoMailReceiver info = new InfoMailReceiver();
+            info.setEmail(contractOwner.getEmail());
+            info.setMailTitle("Viewed");
+            info.setMailMessage("");
+            this.sendMail(info, TOPIC_SIGN);
+        }
         userContractResponse.setUser(user);
-        userContractResponse.setDocuments(documents);
+        userContractResponse.setDocuments(contract.getDocuments());
         userContractResponse.setLastSign(lastSign);
         return userContractResponse;
     }
+
 }

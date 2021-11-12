@@ -15,5 +15,5 @@ public interface DocumentService {
 
     Document getById(UUID uuid);
 
-    UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID);
+    UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
 }

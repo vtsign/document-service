@@ -63,8 +63,9 @@ public class AcceptController {
     })
     @GetMapping("/signing")
     public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId,
-                                            @RequestParam("r") UUID receiverId) {
-        UserContractResponse userContractResponse = documentService.getUDRByContractIdAndUserId(contractId, receiverId);
+                                            @RequestParam("r") UUID receiverId,
+                                            @RequestParam("s") String secretKey) {
+        UserContractResponse userContractResponse = documentService.getUDRByContractIdAndUserId(contractId, receiverId, secretKey);
         return ResponseEntity.ok(userContractResponse);
     }
 
@@ -79,7 +80,7 @@ public class AcceptController {
     @Transactional
     public ResponseEntity<?> signByReceiver(@RequestPart(name = "signed") SignContractByReceiver u,
                                             @RequestPart(required = false, name = "documents") List<MultipartFile> documents) throws IOException {
-        UserContract userContract = contractService.findContractByIdAndUserId(u.getContractId(), u.getUserId());
+        UserContract userContract = contractService.findUserContractByIdAndUserId(u.getContractId(), u.getUserId());
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
             userContract.setSignedDate(new Date());
@@ -110,15 +111,11 @@ public class AcceptController {
 
         }
 
-        System.out.println("documents la: ");
-        System.out.println(documents);
         if (documents != null) {
-            System.out.println("Da nhan duoc documents");
             for (MultipartFile file : documents) {
                 UUID documentId = UUID.fromString(Objects.requireNonNull(file.getOriginalFilename()));
                 Document document = documentService.getById(documentId);
                 if (document != null) {
-                    System.out.println("Da vao upload override");
                     azureStorageService.uploadOverride(document.getSaveName(), file.getBytes());
                 }
             }

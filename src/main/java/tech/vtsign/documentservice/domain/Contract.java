@@ -26,6 +26,7 @@ public class Contract {
     @Column(name = "contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
+    private String title;
     @Column(name = "sender_uuid", columnDefinition = "BINARY(16)")
     @JsonProperty("sender_uuid")
     private UUID senderUUID;
@@ -40,6 +41,6 @@ public class Contract {
     private List<Document> documents;
 
     @OneToMany(mappedBy = "contract")
-    @JsonIgnore
+    @JsonProperty("user_contracts")
     private Set<UserContract> userContracts;
 }

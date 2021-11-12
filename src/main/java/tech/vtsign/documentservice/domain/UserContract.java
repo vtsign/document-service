@@ -1,11 +1,9 @@
 package tech.vtsign.documentservice.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -17,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 @Table(name = "user_contract")
 public class UserContract {
     @Id
@@ -26,6 +25,7 @@ public class UserContract {
     private UUID id;
     private String status;
     private String permission;
+    @JsonIgnore
     private String secretKey;
     @JsonProperty("viewed_date")
     private Date viewedDate;
@@ -34,9 +34,13 @@ public class UserContract {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
+    @JsonIgnore
+    @ToString.Exclude
     private Contract contract;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_uuid")
+    @JsonIgnore
+    @ToString.Exclude
     private User user;
 }
