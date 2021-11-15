@@ -3,6 +3,11 @@ package tech.vtsign.documentservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +31,10 @@ import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentService;
 import tech.vtsign.documentservice.service.XFDFService;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,18 +86,22 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public List<Contract> findContractsByUserIdAndStatus(UUID userUUID, String status) {
-        Optional<User> opt = userRepository.findById(userUUID);
-        List<Contract> contracts = new ArrayList<>();
-        if (opt.isPresent()) {
-            User user = opt.get();
-            Set<UserContract> userContracts = user.getUserContracts();
-            contracts = userContracts.stream().filter(u -> u.getStatus().equals(status))
-                    .map(userContract -> userContract.getContract())
-                    .collect(Collectors.toList());
-
-        }
-        return contracts;
+    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.by("status"));
+        Page<UserContract> pages = userDocumentRepository.findAll(new Specification<UserContract>() {
+            @Override
+            public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+                if(userContract.getStatus()!=null) {
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("status"), userContract.getStatus())));
+                }
+                if(userContract.getUser()!=null) {
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("user"), userContract.getUser())));
+                }
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        },pageable);
+        return pages;
 
     }
 

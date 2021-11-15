@@ -1,5 +1,6 @@
 package tech.vtsign.documentservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +39,7 @@ public class Contract {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     private List<Document> documents;
+
 
     @OneToMany(mappedBy = "contract")
     @JsonProperty("user_contracts")

@@ -1,5 +1,7 @@
 package tech.vtsign.documentservice.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.UserContract;
@@ -16,7 +18,7 @@ public interface ContractService {
 
     UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID);
 
-    List<Contract> findContractsByUserIdAndStatus(UUID userUUID, String status);
+    Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, int page, int pageItems);
 
 
     Contract getContractById(UUID id);

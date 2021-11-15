@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
@@ -17,6 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
+import tech.vtsign.documentservice.domain.User;
+import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.exception.MissingFieldException;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
@@ -26,7 +30,9 @@ import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -77,11 +83,23 @@ public class DocumentController {
                     })
     })
     @GetMapping("/filter")
-    public ResponseEntity<?> retrieveContractByStatus(@RequestParam("status") String status,
+    public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract,
+                                                      @RequestParam("page") int page,
+                                                      @RequestParam("size") int size,
                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
-        List<Contract> contracts = contractService.findContractsByUserIdAndStatus(userInfo.getId(), status);
-        return ResponseEntity.ok(contracts);
+
+        User user = new User();
+        user.setId(userInfo.getId());
+        usercontract.setUser(user);
+        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract,page,size);
+        List<Contract>contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
+        Map<String, Object> result = new HashMap<>();
+        result.put("total_items", userContractPage.getTotalElements());
+        result.put("contracts", contracts);
+        result.put("total_page",userContractPage.getTotalPages());
+        result.put("page",page) ;
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "Signed document")
