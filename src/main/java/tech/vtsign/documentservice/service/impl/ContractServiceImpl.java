@@ -98,6 +98,12 @@ public class ContractServiceImpl implements ContractService {
                 if(userContract.getUser()!=null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("user"), userContract.getUser())));
                 }
+                if(userContract.getViewedDate()!=null){
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("viewedDate"), userContract.getViewedDate())));
+                }
+                if(userContract.getSignedDate()!=null){
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("signedDate"), userContract.getSignedDate())));
+                }
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         },pageable);
