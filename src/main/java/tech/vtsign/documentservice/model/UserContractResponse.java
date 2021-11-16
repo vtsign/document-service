@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import tech.vtsign.documentservice.domain.Document;
+import tech.vtsign.documentservice.domain.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class UserContractResponse {
     @JsonProperty("documents")
     private List<Document> documents = new ArrayList<>();
     @JsonProperty("user")
-    private LoginServerResponseDto user;
+    private User user;
     @JsonProperty("last_sign")
     private boolean lastSign;
 }

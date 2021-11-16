@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
@@ -84,7 +83,7 @@ public class DocumentController {
     })
     @GetMapping("/filter")
     public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract,
-                                                      @RequestParam(value = "page",required = false,defaultValue = "1") int page,
+                                                      @RequestParam(value = "page", required = false, defaultValue = "1") int page,
                                                       @RequestParam(value = "size", required = false, defaultValue = "4") int size,
                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
@@ -92,13 +91,13 @@ public class DocumentController {
         User user = new User();
         user.setId(userInfo.getId());
         usercontract.setUser(user);
-        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract,page - 1,size);
-        List<Contract>contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
+        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract, page - 1, size);
+        List<Contract> contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
         Map<String, Object> result = new HashMap<>();
         result.put("total_items", userContractPage.getTotalElements());
         result.put("contracts", contracts);
-        result.put("total_pages",userContractPage.getTotalPages());
-        result.put("current_page",page) ;
+        result.put("total_pages", userContractPage.getTotalPages());
+        result.put("current_page", page);
         return ResponseEntity.ok(result);
     }
 
@@ -115,10 +114,10 @@ public class DocumentController {
     @PostMapping("/sign_document")
     public ResponseEntity<?> signByUser(@RequestPart(name = "signed") SignContractByReceiver u,
                                         @RequestPart(required = false, name = "documents") List<MultipartFile> documents,
-                                        @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                        @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
         u.setUserId(userInfo.getId());
-        Boolean rs =  contractService.signContractByUser(u,documents);
+        Boolean rs = contractService.signContractByUser(u, documents);
         return ResponseEntity.ok(rs);
     }
 
@@ -134,9 +133,9 @@ public class DocumentController {
     })
     @GetMapping("/contract")
     public ResponseEntity<Contract> findContractByContractUUID(@RequestParam(name = "c") UUID contractUUID,
-                                                               @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails){
+                                                               @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
-        Contract contract =  contractService.findContractByContractAndReceiver(contractUUID, userInfo.getId());
+        Contract contract = contractService.findContractByContractAndReceiver(contractUUID, userInfo.getId());
         return ResponseEntity.ok(contract);
     }
 

@@ -1,5 +1,7 @@
 package tech.vtsign.documentservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,12 +20,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class User {
+public class User extends Auditable<String> implements Serializable {
     @Id
     @Column(name = "user_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
     private String email;
+    @JsonIgnore
     private String phone;
+    @JsonProperty("first_name")
+    private String firstName;
+    @JsonProperty("last_name")
+    private String lastName;
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<UserContract> userContracts;
 }
