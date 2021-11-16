@@ -84,21 +84,21 @@ public class DocumentController {
     })
     @GetMapping("/filter")
     public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract,
-                                                      @RequestParam("page") int page,
-                                                      @RequestParam("size") int size,
+                                                      @RequestParam(value = "page",defaultValue = 1) int page,
+                                                      @RequestParam(value = "size", defaultValue = 4) int size,
                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
         User user = new User();
         user.setId(userInfo.getId());
         usercontract.setUser(user);
-        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract,page,size);
+        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract,page - 1,size);
         List<Contract>contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
         Map<String, Object> result = new HashMap<>();
         result.put("total_items", userContractPage.getTotalElements());
         result.put("contracts", contracts);
-        result.put("total_page",userContractPage.getTotalPages());
-        result.put("page",page) ;
+        result.put("total_pages",userContractPage.getTotalPages());
+        result.put("current_page",page) ;
         return ResponseEntity.ok(result);
     }
 
