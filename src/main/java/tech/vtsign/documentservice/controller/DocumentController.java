@@ -84,8 +84,8 @@ public class DocumentController {
     })
     @GetMapping("/filter")
     public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract,
-                                                      @RequestParam(value = "page",defaultValue = 1) int page,
-                                                      @RequestParam(value = "size", defaultValue = 4) int size,
+                                                      @RequestParam(value = "page",required = false,defaultValue = "1") int page,
+                                                      @RequestParam(value = "size", required = false, defaultValue = "4") int size,
                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
