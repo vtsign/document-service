@@ -1,6 +1,5 @@
 package tech.vtsign.documentservice.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Contract {
+public class Contract extends Auditable<String> implements Serializable {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -27,14 +27,14 @@ public class Contract {
     private UUID id;
 
     private String title;
-    @Column(name = "sender_uuid", columnDefinition = "BINARY(16)")
-    @JsonProperty("sender_uuid")
-    private UUID senderUUID;
     @JsonProperty("sent_date")
     private Date sentDate;
+    @JsonProperty("last_modified_date")
+    private Date lastModifiedDate;
     private boolean signed;
     @JsonProperty("complete_date")
     private Date completeDate;
+
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")

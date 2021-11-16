@@ -68,7 +68,7 @@ public class AcceptController {
     @Transactional
     public ResponseEntity<?> signByReceiver(@RequestPart(name = "signed") SignContractByReceiver u,
                                             @RequestPart(required = false, name = "documents") List<MultipartFile> documents) throws IOException {
-        Boolean rs =  contractService.signContractByUser(u,documents);
+        Boolean rs = contractService.signContractByUser(u, documents);
         return ResponseEntity.ok(rs);
     }
 

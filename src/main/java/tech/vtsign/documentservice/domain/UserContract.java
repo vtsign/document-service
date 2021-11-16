@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ import java.util.UUID;
 @Setter
 @ToString
 @Table(name = "user_contract")
-public class UserContract {
+public class UserContract extends Auditable<String> implements Serializable {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -32,6 +33,8 @@ public class UserContract {
     @JsonProperty("signed_date")
     private Date signedDate;
 
+    private boolean owner = false;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")
     @JsonIgnore
@@ -40,7 +43,6 @@ public class UserContract {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_uuid")
-    @JsonIgnore
     @ToString.Exclude
     private User user;
 }

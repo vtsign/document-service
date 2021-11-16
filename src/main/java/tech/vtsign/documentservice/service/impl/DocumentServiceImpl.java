@@ -69,18 +69,22 @@ public class DocumentServiceImpl implements DocumentService {
             User user = new User();
             user.setId(senderInfo.getId());
             user.setEmail(senderInfo.getEmail());
+            user.setPhone(senderInfo.getPhone());
+            user.setFirstName(senderInfo.getFirstName());
+            user.setLastName(senderInfo.getLastName());
             User userSenderSaved = userRepository.save(user);
 
             Contract contract = new Contract();
             contract.setTitle(clientRequest.getMailTitle());
-            contract.setSenderUUID(senderInfo.getId());
             contract.setSentDate(new Date());
+            contract.setLastModifiedDate(new Date());
             contract.setDocuments(documents);
             Contract contractSaved = contractRepository.save(contract);
 
             UserContract userContract = new UserContract();
             userContract.setId(UUID.randomUUID());
             userContract.setStatus(DocumentStatus.WAITING);
+            userContract.setOwner(true);
             userContract.setViewedDate(new Date());
             userContract.setSignedDate(new Date());
 
@@ -89,7 +93,7 @@ public class DocumentServiceImpl implements DocumentService {
             userContracts.add(userContract);
 
             for (Receiver receiver : clientRequest.getReceivers()) {
-                UserContract userContractTemp = this.getUserDocument(receiver);
+                UserContract userContractTemp = this.getUserContract(receiver);
                 userContractTemp.setContract(contractSaved);
                 userContractTemp.setPermission(receiver.getPermission());
                 userContractTemp.setSecretKey(receiver.getKey());
@@ -136,12 +140,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
-    private UserContract getUserDocument(Receiver receiver) {
-        LoginServerResponseDto userReceiver = userServiceProxy.getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
+    private UserContract getUserContract(Receiver receiver) {
+        LoginServerResponseDto userReceiver = userServiceProxy
+                .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
         receiver.setId(userReceiver.getId());
         User user = new User();
         user.setId(userReceiver.getId());
         user.setEmail(receiver.getEmail());
+        user.setFirstName(userReceiver.getFirstName());
+        user.setLastName(userReceiver.getLastName());
+        user.setPhone(userReceiver.getPhone());
         User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();

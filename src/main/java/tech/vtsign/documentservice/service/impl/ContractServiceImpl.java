@@ -21,7 +21,6 @@ import tech.vtsign.documentservice.model.DocumentStatus;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.model.UserContractResponse;
-import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.UserDocumentRepository;
 import tech.vtsign.documentservice.repository.UserRepository;
@@ -36,7 +35,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,11 +44,9 @@ public class ContractServiceImpl implements ContractService {
     private final ContractRepository contractRepository;
     private final UserRepository userRepository;
     private final UserDocumentRepository userDocumentRepository;
-    private final UserServiceProxy userServiceProxy;
     private final DocumentService documentService;
     private final XFDFService xfdfService;
     private final AzureStorageService azureStorageService;
-
 
 
     @Override
@@ -80,33 +76,33 @@ public class ContractServiceImpl implements ContractService {
     public UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID) {
         Contract contract = new Contract();
         contract.setId(contractUUID);
-        User user= new User();
+        User user = new User();
         user.setId(userUUID);
-        return userDocumentRepository.findUserContractByContractAndUser(contract,user);
+        return userDocumentRepository.findUserContractByContractAndUser(contract, user);
     }
 
     @Override
     public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.by("status"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("status"));
         Page<UserContract> pages = userDocumentRepository.findAll(new Specification<UserContract>() {
             @Override
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
-                if(userContract.getStatus()!=null) {
+                if (userContract.getStatus() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("status"), userContract.getStatus())));
                 }
-                if(userContract.getUser()!=null) {
+                if (userContract.getUser() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("user"), userContract.getUser())));
                 }
-                if(userContract.getViewedDate()!=null){
+                if (userContract.getViewedDate() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("viewedDate"), userContract.getViewedDate())));
                 }
-                if(userContract.getSignedDate()!=null){
+                if (userContract.getSignedDate() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("signedDate"), userContract.getSignedDate())));
                 }
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
-        },pageable);
+        }, pageable);
         return pages;
 
     }
@@ -118,10 +114,11 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
-        LoginServerResponseDto user = userServiceProxy.getUserById(userUUID);
+//        LoginServerResponseDto user = userServiceProxy.getUserById(userUUID);
+        User user = userRepository.getById(userUUID);
         UserContract userContract = this.findUserContractByIdAndUserId(contractId, userUUID);
 
-        if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)&&!userContract.getSecretKey().equals(secretKey)) {
+        if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
         Contract contract = userContract.getContract();
@@ -152,7 +149,7 @@ public class ContractServiceImpl implements ContractService {
 
     @SneakyThrows
     @Override
-    public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents){
+    public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
         UserContract userContract = this.findUserContractByIdAndUserId(u.getContractId(), u.getUserId());
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
@@ -170,6 +167,7 @@ public class ContractServiceImpl implements ContractService {
             // update contract status
 
             Contract contract = userContract.getContract();
+            contract.setLastModifiedDate(new Date());
             boolean completed = contract.getUserContracts().stream()
                     .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
                     .count() == contract.getUserContracts().size() - 1;

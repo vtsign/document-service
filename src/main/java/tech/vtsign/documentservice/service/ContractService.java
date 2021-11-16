@@ -1,7 +1,6 @@
 package tech.vtsign.documentservice.service;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.UserContract;
@@ -22,6 +21,8 @@ public interface ContractService {
 
 
     Contract getContractById(UUID id);
+
     UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
+
     Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents);
 }
