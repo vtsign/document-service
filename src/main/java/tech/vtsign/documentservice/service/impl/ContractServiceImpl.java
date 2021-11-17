@@ -69,11 +69,11 @@ public class ContractServiceImpl implements ContractService {
     public UserContract findContractById(UUID contractUUID) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
-        return findUserContractByIdAndUserId(contractUUID, senderInfo.getId());
+        return findUserContractByContractIdAndUserId(contractUUID, senderInfo.getId());
     }
 
     @Override
-    public UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID) {
+    public UserContract findUserContractByContractIdAndUserId(UUID contractUUID, UUID userUUID) {
         Contract contract = new Contract();
         contract.setId(contractUUID);
         User user = new User();
@@ -114,16 +114,13 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
-//        LoginServerResponseDto user = userServiceProxy.getUserById(userUUID);
         User user = userRepository.getById(userUUID);
-        UserContract userContract = this.findUserContractByIdAndUserId(contractId, userUUID);
+        UserContract userContract = this.findUserContractByContractIdAndUserId(contractId, userUUID);
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
         Contract contract = userContract.getContract();
-//        Optional<User> contractOwnerOpt = userRepository.findById(contract.getSenderUUID());
-//        User contractOwner = contractOwnerOpt.orElseThrow(() -> new NotFoundException("Not found user"));
         if (userContract.getStatus().equals(DocumentStatus.SIGNED))
             throw new SignedException("A Contract was signed by this User");
         UserContractResponse userContractResponse = new UserContractResponse();
@@ -150,7 +147,7 @@ public class ContractServiceImpl implements ContractService {
     @SneakyThrows
     @Override
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
-        UserContract userContract = this.findUserContractByIdAndUserId(u.getContractId(), u.getUserId());
+        UserContract userContract = this.findUserContractByContractIdAndUserId(u.getContractId(), u.getUserId());
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
             userContract.setSignedDate(new Date());
@@ -194,4 +191,10 @@ public class ContractServiceImpl implements ContractService {
         return true;
     }
 
+    @Override
+    public long countAllByUserAndStatus(UUID userUUID, String status) {
+        User user= new User();
+        user.setId(userUUID);
+        return userDocumentRepository.countAllByUserAndStatus(user,status);
+    }
 }

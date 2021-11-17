@@ -23,6 +23,7 @@ import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.exception.MissingFieldException;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.DocumentClientRequest;
+import tech.vtsign.documentservice.model.DocumentStatus;
 import tech.vtsign.documentservice.model.LoginServerResponseDto;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
@@ -139,5 +140,15 @@ public class DocumentController {
         return ResponseEntity.ok(contract);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<?> countContracts( @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails){
+        LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
+        Map<String, Object> result = new HashMap<>();
+        result.put(DocumentStatus.COMPLETED,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.COMPLETED));
+        result.put(DocumentStatus.WAITING,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.WAITING));
+        result.put(DocumentStatus.ACTION_REQUIRE,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.ACTION_REQUIRE));
+        result.put(DocumentStatus.DELETED,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.DELETED));
+        return ResponseEntity.ok(result);
+    }
 }

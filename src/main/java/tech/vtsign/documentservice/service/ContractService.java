@@ -15,7 +15,7 @@ public interface ContractService {
 
     UserContract findContractById(UUID contractUUID);
 
-    UserContract findUserContractByIdAndUserId(UUID contractUUID, UUID userUUID);
+    UserContract findUserContractByContractIdAndUserId(UUID contractUUID, UUID userUUID);
 
     Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, int page, int pageItems);
 
@@ -25,4 +25,5 @@ public interface ContractService {
     UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
 
     Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents);
+    long countAllByUserAndStatus(UUID userUUID, String status);
 }

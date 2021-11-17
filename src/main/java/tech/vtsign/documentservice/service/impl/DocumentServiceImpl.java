@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -126,9 +127,6 @@ public class DocumentServiceImpl implements DocumentService {
                     hostname,
                     contract.getId(), receiver.getId()
             );
-//            InfoMailReceiver infoMailReceiver =
-//                    new InfoMailReceiver(receiver.getName(), receiver.getEmail(), receiver.getPrivateMessage(),
-//                            clientRequest.getMailMessage(), clientRequest.getMailTitle(), url, senderFullName);
             ReceiverContract receiverContract = new ReceiverContract();
             BeanUtils.copyProperties(clientRequest, receiverContract);
             receiverContract.setReceiver(receiver);
@@ -141,15 +139,20 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private UserContract getUserContract(Receiver receiver) {
+        String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
+        if(!Pattern.matches(regexPhone, receiver.getPhone())){
+            throw new IllegalArgumentException("phone doesnot has this format");
+        }
         LoginServerResponseDto userReceiver = userServiceProxy
                 .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
-        receiver.setId(userReceiver.getId());
         User user = new User();
+        String phone  = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
         user.setId(userReceiver.getId());
-        user.setEmail(receiver.getEmail());
+        user.setEmail(userReceiver.getEmail());
         user.setFirstName(userReceiver.getFirstName());
         user.setLastName(userReceiver.getLastName());
-        user.setPhone(userReceiver.getPhone());
+
+        user.setPhone(phone);
         User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
