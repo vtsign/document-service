@@ -7,11 +7,12 @@ import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface UserDocumentRepository extends JpaRepository<UserContract, UUID>, JpaSpecificationExecutor<UserContract> {
-    UserContract findUserContractByContractAndUser(Contract contract, User user);
+    Optional<UserContract> findUserContractByContractAndUser(Contract contract, User user);
 
     long countAllByUserAndStatus(User user, String status);
 }

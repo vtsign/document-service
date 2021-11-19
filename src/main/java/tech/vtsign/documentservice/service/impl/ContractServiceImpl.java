@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.*;
-import tech.vtsign.documentservice.exception.BadRequestException;
-import tech.vtsign.documentservice.exception.LockedException;
-import tech.vtsign.documentservice.exception.SignedException;
-import tech.vtsign.documentservice.exception.UnauthorizedException;
+import tech.vtsign.documentservice.exception.*;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.UserDocumentRepository;
@@ -76,7 +73,8 @@ public class ContractServiceImpl implements ContractService {
         contract.setId(contractUUID);
         User user = new User();
         user.setId(userUUID);
-        return userDocumentRepository.findUserContractByContractAndUser(contract, user);
+        return userDocumentRepository.findUserContractByContractAndUser(contract, user)
+                .orElseThrow(() -> new NotFoundException("contracts not found"));
     }
 
     @Override
@@ -112,7 +110,6 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
-        User user = userRepository.getById(userUUID);
         UserContract userContract = this.findUserContractByContractIdAndUserId(contractId, userUUID);
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
@@ -137,10 +134,12 @@ public class ContractServiceImpl implements ContractService {
             optionalUserContractOwner.ifPresent(ud -> {
                 documentCommonMessage.setTo(ud.getUser().getEmail());
             });
-            documentCommonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu %s",
+            documentCommonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu \"%s\" ",
                     userView.getFullName(), userView.getEmail(), contract.getTitle()));
             documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
         }
+
+        User user = userRepository.findById(userUUID).orElseThrow(() -> new NotFoundException("user not found"));
         userContractResponse.setUser(user);
         userContractResponse.setDocuments(contract.getDocuments());
         userContractResponse.setLastSign(lastSign);
@@ -175,7 +174,7 @@ public class ContractServiceImpl implements ContractService {
                 DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
                 documentCommonMessage.setTitle("Signed");
                 User user = uc.getUser();
-                documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu %s",
+                documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
                         user.getFullName(), user.getEmail(), contract.getTitle()));
                 documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
             });
@@ -210,7 +209,7 @@ public class ContractServiceImpl implements ContractService {
                     documentCommonMessage.setTitle("Signed");
                     documentCommonMessage.setAttachments(attachments);
                     documentCommonMessage.setMessage(
-                            String.format("Tài liệu %s đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
+                            String.format("Tài liệu \"%s\" đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
                                     contract.getTitle()));
                     documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
 

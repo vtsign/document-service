@@ -146,6 +146,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
         LoginServerResponseDto userReceiver = userServiceProxy
                 .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
+        receiver.setId(userReceiver.getId());
         User user = new User();
         String phone = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
         user.setId(userReceiver.getId());
