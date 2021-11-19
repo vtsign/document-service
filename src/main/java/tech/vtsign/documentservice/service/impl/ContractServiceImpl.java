@@ -3,6 +3,7 @@ package tech.vtsign.documentservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,18 +18,12 @@ import tech.vtsign.documentservice.exception.BadRequestException;
 import tech.vtsign.documentservice.exception.LockedException;
 import tech.vtsign.documentservice.exception.SignedException;
 import tech.vtsign.documentservice.exception.UnauthorizedException;
-import tech.vtsign.documentservice.model.DocumentStatus;
-import tech.vtsign.documentservice.model.LoginServerResponseDto;
-import tech.vtsign.documentservice.model.SignContractByReceiver;
-import tech.vtsign.documentservice.model.UserContractResponse;
+import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.UserDocumentRepository;
 import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
-import tech.vtsign.documentservice.service.AzureStorageService;
-import tech.vtsign.documentservice.service.ContractService;
-import tech.vtsign.documentservice.service.DocumentService;
-import tech.vtsign.documentservice.service.XFDFService;
+import tech.vtsign.documentservice.service.*;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -47,7 +42,10 @@ public class ContractServiceImpl implements ContractService {
     private final DocumentService documentService;
     private final XFDFService xfdfService;
     private final AzureStorageService azureStorageService;
+    private final DocumentProducer documentProducer;
 
+    @Value("${tech.vtsign.kafka.document-service.notify-common}")
+    private String TOPIC_NOTIFY_COMMON;
 
     @Override
     public Contract findContractByContractAndReceiver(UUID contractId, UUID receiverId) {
@@ -131,18 +129,24 @@ public class ContractServiceImpl implements ContractService {
         if (userContract.getViewedDate() == null) {
             userContract.setViewedDate(new Date());
             //sent email receiver viewed
-
-//            ReceiverContract info = new ReceiverContract();
-//            info.setEmail(contractOwner.getEmail());
-//            info.setMailTitle("Viewed");
-//            info.setMailMessage("");
-//            this.sendMail(info, TOPIC_SIGN);
+            DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
+            documentCommonMessage.setTitle("Viewed");
+            User userView = userContract.getUser();
+            Optional<UserContract> optionalUserContractOwner = contract.getUserContracts().stream()
+                    .filter(UserContract::isOwner).findFirst();
+            optionalUserContractOwner.ifPresent(ud -> {
+                documentCommonMessage.setTo(ud.getUser().getEmail());
+            });
+            documentCommonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu %s",
+                    userView.getFullName(), userView.getEmail(), contract.getTitle()));
+            documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
         }
         userContractResponse.setUser(user);
         userContractResponse.setDocuments(contract.getDocuments());
         userContractResponse.setLastSign(lastSign);
         return userContractResponse;
     }
+
 
     @SneakyThrows
     @Override
@@ -163,8 +167,29 @@ public class ContractServiceImpl implements ContractService {
 
             // update contract status
 
+
             Contract contract = userContract.getContract();
             contract.setLastModifiedDate(new Date());
+            Set<UserContract> userContracts = contract.getUserContracts();
+            userContracts.forEach(uc -> {
+                DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
+                documentCommonMessage.setTitle("Signed");
+                User user = uc.getUser();
+                documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu %s",
+                        user.getFullName(), user.getEmail(), contract.getTitle()));
+                documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
+            });
+
+
+            if (documents != null) {
+                for (MultipartFile file : documents) {
+                    UUID documentId = UUID.fromString(Objects.requireNonNull(file.getOriginalFilename()));
+                    Document document = documentService.getById(documentId);
+                    if (document != null) {
+                        azureStorageService.uploadOverride(document.getSaveName(), file.getBytes());
+                    }
+                }
+            }
             boolean completed = contract.getUserContracts().stream()
                     .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
                     .count() == contract.getUserContracts().size() - 1;
@@ -172,29 +197,38 @@ public class ContractServiceImpl implements ContractService {
             if (completed) {
                 contract.setSigned(true);
                 contract.setCompleteDate(new Date());
-                contract.getUserContracts().forEach(ud -> {
-                    ud.setStatus(DocumentStatus.COMPLETED);
+                userContracts.forEach(uc -> {
+                    uc.setStatus(DocumentStatus.COMPLETED);
+                    DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
+                    List<Attachment> attachments = new ArrayList<>();
+                    contract.getDocuments().forEach(document -> {
+                        Attachment attachment = new Attachment();
+                        attachment.setUrl(document.getUrl());
+                        attachment.setName(document.getOriginName());
+                        attachments.add(attachment);
+                    });
+                    documentCommonMessage.setTitle("Signed");
+                    documentCommonMessage.setAttachments(attachments);
+                    documentCommonMessage.setMessage(
+                            String.format("Tài liệu %s đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
+                                    contract.getTitle()));
+                    documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
+
                 });
             }
 
         }
 
-        if (documents != null) {
-            for (MultipartFile file : documents) {
-                UUID documentId = UUID.fromString(Objects.requireNonNull(file.getOriginalFilename()));
-                Document document = documentService.getById(documentId);
-                if (document != null) {
-                    azureStorageService.uploadOverride(document.getSaveName(), file.getBytes());
-                }
-            }
-        }
+
         return true;
     }
 
     @Override
     public long countAllByUserAndStatus(UUID userUUID, String status) {
-        User user= new User();
+        User user = new User();
         user.setId(userUUID);
-        return userDocumentRepository.countAllByUserAndStatus(user,status);
+        return userDocumentRepository.countAllByUserAndStatus(user, status);
     }
+
+
 }

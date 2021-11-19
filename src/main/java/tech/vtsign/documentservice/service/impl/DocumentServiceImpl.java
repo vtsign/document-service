@@ -11,6 +11,7 @@ import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
+import tech.vtsign.documentservice.exception.InvalidFormatException;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
@@ -140,13 +141,13 @@ public class DocumentServiceImpl implements DocumentService {
 
     private UserContract getUserContract(Receiver receiver) {
         String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
-        if(!Pattern.matches(regexPhone, receiver.getPhone())){
-            throw new IllegalArgumentException("phone doesnot has this format");
+        if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())) {
+            throw new InvalidFormatException("phone does not has this format");
         }
         LoginServerResponseDto userReceiver = userServiceProxy
                 .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
         User user = new User();
-        String phone  = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
+        String phone = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
         user.setId(userReceiver.getId());
         user.setEmail(userReceiver.getEmail());
         user.setFirstName(userReceiver.getFirstName());

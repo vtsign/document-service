@@ -25,5 +25,6 @@ public interface ContractService {
     UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
 
     Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents);
+
     long countAllByUserAndStatus(UUID userUUID, String status);
 }

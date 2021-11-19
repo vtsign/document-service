@@ -12,5 +12,6 @@ import java.util.UUID;
 @Repository
 public interface UserDocumentRepository extends JpaRepository<UserContract, UUID>, JpaSpecificationExecutor<UserContract> {
     UserContract findUserContractByContractAndUser(Contract contract, User user);
+
     long countAllByUserAndStatus(User user, String status);
 }

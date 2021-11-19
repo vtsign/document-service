@@ -141,14 +141,14 @@ public class DocumentController {
     }
 
     @GetMapping("/count")
-    public ResponseEntity<?> countContracts( @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails){
+    public ResponseEntity<?> countContracts(@Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
         Map<String, Object> result = new HashMap<>();
-        result.put(DocumentStatus.COMPLETED,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.COMPLETED));
-        result.put(DocumentStatus.WAITING,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.WAITING));
-        result.put(DocumentStatus.ACTION_REQUIRE,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.ACTION_REQUIRE));
-        result.put(DocumentStatus.DELETED,contractService.countAllByUserAndStatus(userInfo.getId(),DocumentStatus.DELETED));
+        result.put(DocumentStatus.COMPLETED, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.COMPLETED));
+        result.put(DocumentStatus.WAITING, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.WAITING));
+        result.put(DocumentStatus.ACTION_REQUIRE, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.ACTION_REQUIRE));
+        result.put(DocumentStatus.DELETED, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.DELETED));
         return ResponseEntity.ok(result);
     }
 }

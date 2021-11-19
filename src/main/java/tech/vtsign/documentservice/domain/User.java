@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
@@ -34,4 +31,9 @@ public class User extends Auditable<String> implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<UserContract> userContracts;
+
+    @Transient
+    public String getFullName() {
+        return String.format("%s %s", this.firstName, this.lastName);
+    }
 }
