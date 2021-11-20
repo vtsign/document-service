@@ -22,10 +22,7 @@ import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.*;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.*;
 
 @Slf4j
@@ -78,12 +75,18 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, int page, int size) {
+    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract,Contract contract, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("status"));
+
         Page<UserContract> pages = userDocumentRepository.findAll(new Specification<UserContract>() {
             @Override
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+
                 List<Predicate> predicates = new ArrayList<>();
+                if(contract.getTitle()!=null){
+                    final Path<Contract> contractPath = root.get("contract");
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.like(contractPath.get("title"),"%"+contract.getTitle()+"%")));
+                }
                 if (userContract.getStatus() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("status"), userContract.getStatus())));
                 }
