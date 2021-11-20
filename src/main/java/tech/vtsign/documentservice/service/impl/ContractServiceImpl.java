@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -75,17 +74,19 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract,Contract contract, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("status"));
+    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
 
-        Page<UserContract> pages = userDocumentRepository.findAll(new Specification<UserContract>() {
+        Page<UserContract> userContracts = userDocumentRepository.findAll(new Specification<UserContract>() {
             @Override
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
 
+                final Path<Contract> contractPath = root.get("contract");
+                criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get("lastModifiedDate")));
                 List<Predicate> predicates = new ArrayList<>();
-                if(contract.getTitle()!=null){
-                    final Path<Contract> contractPath = root.get("contract");
-                    predicates.add(criteriaBuilder.and(criteriaBuilder.like(contractPath.get("title"),"%"+contract.getTitle()+"%")));
+                if (contract.getTitle() != null) {
+
+                    predicates.add(criteriaBuilder.and(criteriaBuilder.like(contractPath.get("title"), "%" + contract.getTitle() + "%")));
                 }
                 if (userContract.getStatus() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("status"), userContract.getStatus())));
@@ -99,10 +100,11 @@ public class ContractServiceImpl implements ContractService {
                 if (userContract.getSignedDate() != null) {
                     predicates.add(criteriaBuilder.and(criteriaBuilder.equal(root.get("signedDate"), userContract.getSignedDate())));
                 }
+
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         }, pageable);
-        return pages;
+        return userContracts;
 
     }
 
