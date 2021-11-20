@@ -17,7 +17,7 @@ public interface ContractService {
 
     UserContract findUserContractByContractIdAndUserId(UUID contractUUID, UUID userUUID);
 
-    Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract,Contract contract, int page, int pageItems);
+    Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int pageItems);
 
 
     Contract getContractById(UUID id);
