@@ -30,6 +30,8 @@ public class UserContract extends Auditable<String> implements Serializable {
     private String secretKey;
     @JsonProperty("viewed_date")
     private Date viewedDate;
+    @JsonProperty("private_message")
+    private String privateMessage;
     @JsonProperty("signed_date")
     private Date signedDate;
 

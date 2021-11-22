@@ -76,13 +76,21 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
+        String sortName = "createdDate";
+        String status = userContract.getStatus();
+        if (status.equals(DocumentStatus.COMPLETED))
+            sortName = "completeDate";
+        else if (status.equals(DocumentStatus.DELETED))
+            sortName = "lastModifiedDate";
 
+
+        String finalSortName = sortName;
         Page<UserContract> userContracts = userDocumentRepository.findAll(new Specification<UserContract>() {
             @Override
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
 
                 final Path<Contract> contractPath = root.get("contract");
-                criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get("lastModifiedDate")));
+                criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get(finalSortName)));
                 List<Predicate> predicates = new ArrayList<>();
                 if (contract.getTitle() != null) {
 
