@@ -96,7 +96,10 @@ public class DocumentServiceImpl implements DocumentService {
 
             for (Receiver receiver : clientRequest.getReceivers()) {
                 UserContract userContractTemp = this.getUserContract(receiver);
-
+                userContractTemp.setContract(contractSaved);
+                userContractTemp.setPermission(receiver.getPermission());
+                userContractTemp.setSecretKey(receiver.getKey());
+                userContract.setPublicMessage(clientRequest.getMailMessage());
                 userContracts.add(userContractTemp);
             }
             userDocumentRepository.saveAll(userContracts);
@@ -156,8 +159,8 @@ public class DocumentServiceImpl implements DocumentService {
         User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
-        userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
         userContract.setPrivateMessage(receiver.getPrivateMessage());
+        userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
         userContract.setUser(userSaved);
         return userContract;
     }
