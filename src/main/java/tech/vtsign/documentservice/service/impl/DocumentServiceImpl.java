@@ -43,9 +43,9 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Value("${tech.vtsign.hostname}")
-    private String hostname = "http://localhost/";
+    private final String hostname = "http://localhost/";
     @Value("${server.servlet.context-path}")
-    private String contextPath = "/document";
+    private final String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
 
@@ -148,13 +148,14 @@ public class DocumentServiceImpl implements DocumentService {
         LoginServerResponseDto userReceiver = userServiceProxy
                 .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
         receiver.setId(userReceiver.getId());
+
         User user = new User();
         String phone = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
         user.setId(userReceiver.getId());
         user.setEmail(userReceiver.getEmail());
         user.setFirstName(userReceiver.getFirstName());
         user.setLastName(userReceiver.getLastName());
-
+        receiver.setPhone(phone);
         user.setPhone(phone);
         User userSaved = userRepository.save(user);
 
@@ -169,6 +170,4 @@ public class DocumentServiceImpl implements DocumentService {
     public Document getById(UUID uuid) {
         return documentRepository.getById(uuid);
     }
-
-
 }
