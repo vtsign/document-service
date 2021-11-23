@@ -86,7 +86,6 @@ public class DocumentServiceImpl implements DocumentService {
             Contract contractSaved = contractRepository.save(contract);
 
             UserContract userContract = new UserContract();
-            userContract.setId(UUID.randomUUID());
             userContract.setStatus(DocumentStatus.WAITING);
             userContract.setOwner(true);
             userContract.setViewedDate(new Date());
@@ -101,7 +100,7 @@ public class DocumentServiceImpl implements DocumentService {
                 userContractTemp.setContract(contractSaved);
                 userContractTemp.setPermission(receiver.getPermission());
                 userContractTemp.setSecretKey(receiver.getKey());
-                userContract.setPublicMessage(clientRequest.getMailMessage());
+                userContractTemp.setPublicMessage(clientRequest.getMailMessage());
                 userContracts.add(userContractTemp);
             }
             userDocumentRepository.saveAll(userContracts);
@@ -159,12 +158,12 @@ public class DocumentServiceImpl implements DocumentService {
         user.setLastName(userReceiver.getLastName());
         receiver.setPhone(phone);
         user.setPhone(phone);
-//        User userSaved = userRepository.save(user);
+        User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
         userContract.setPrivateMessage(receiver.getPrivateMessage());
         userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
-        userContract.setUser(user);
+        userContract.setUser(userSaved);
         return userContract;
     }
 
