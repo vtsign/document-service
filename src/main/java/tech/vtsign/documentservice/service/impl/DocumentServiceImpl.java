@@ -1,6 +1,7 @@
 package tech.vtsign.documentservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,13 +50,14 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
 
+    @SneakyThrows
     @Override
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
         boolean success = true;
 
-        try {
+
             List<UserContract> userContracts = new ArrayList<>();
             List<Document> documents = new ArrayList<>();
             for (MultipartFile file : files) {
@@ -106,10 +108,10 @@ public class DocumentServiceImpl implements DocumentService {
 
             this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
 
-        } catch (Exception ex) {
-            success = false;
-            ex.printStackTrace();
-        }
+//        } catch (Exception ex) {
+//            success = false;
+////            ex.printStackTrace();
+//        }
         return success;
 
     }
@@ -157,12 +159,12 @@ public class DocumentServiceImpl implements DocumentService {
         user.setLastName(userReceiver.getLastName());
         receiver.setPhone(phone);
         user.setPhone(phone);
-        User userSaved = userRepository.save(user);
+//        User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
         userContract.setPrivateMessage(receiver.getPrivateMessage());
         userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
-        userContract.setUser(userSaved);
+        userContract.setUser(user);
         return userContract;
     }
 

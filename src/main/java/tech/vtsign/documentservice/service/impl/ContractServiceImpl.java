@@ -70,7 +70,7 @@ public class ContractServiceImpl implements ContractService {
         User user = new User();
         user.setId(userUUID);
         return userDocumentRepository.findUserContractByContractAndUser(contract, user)
-                .orElseThrow(() -> new NotFoundException("contracts not found"));
+                .orElseThrow(() -> new NotFoundException("contract not found"));
     }
 
     @Override
