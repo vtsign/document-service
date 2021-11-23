@@ -43,9 +43,9 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Value("${tech.vtsign.hostname}")
-    private final String hostname = "http://localhost/";
+    private String hostname = "http://localhost/";
     @Value("${server.servlet.context-path}")
-    private final String contextPath = "/document";
+    private String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
 
