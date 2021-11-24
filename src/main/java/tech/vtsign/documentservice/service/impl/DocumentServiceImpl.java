@@ -53,6 +53,17 @@ public class DocumentServiceImpl implements DocumentService {
     @SneakyThrows
     @Override
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
+        String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
+        String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+
+
+        for (Receiver receiver : clientRequest.getReceivers()) {
+            if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())
+                    || receiver.getEmail()==null
+                    ||receiver.getEmail() != null && !Pattern.matches(regexEmail, receiver.getEmail())) {
+                throw new InvalidFormatException("format of phone or mail does not correct ");
+            }
+        }
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
         boolean success = true;
@@ -107,10 +118,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
 
-//        } catch (Exception ex) {
-//            success = false;
-////            ex.printStackTrace();
-//        }
+
         return success;
 
     }
@@ -142,10 +150,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private UserContract getUserContract(Receiver receiver) {
-        String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
-        if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())) {
-            throw new InvalidFormatException("phone does not has this format");
-        }
+
         LoginServerResponseDto userReceiver = userServiceProxy
                 .getOrCreateUser(receiver.getEmail(), receiver.getPhone(), receiver.getName());
         receiver.setId(userReceiver.getId());
