@@ -9,4 +9,5 @@ public class DocumentStatus {
     public static final String DELETED = "DELETED";
     public static final String HIDDEN = "HIDDEN";
     public static final String SIGNED = "SIGNED";
+    public static final String READ = "READ";
 }

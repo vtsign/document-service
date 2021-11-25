@@ -80,7 +80,6 @@ public class DocumentServiceImpl implements DocumentService {
                 documents.add(document);
             }
 
-
             User user = new User();
             user.setId(senderInfo.getId());
             user.setEmail(senderInfo.getEmail());
@@ -134,16 +133,18 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName) {
         clientRequest.getReceivers().forEach(receiver -> {
-            String url = String.format("%s/signDocument?c=%s&r=%s",
-                    hostname,
-                    contract.getId(), receiver.getId()
-            );
-            ReceiverContract receiverContract = new ReceiverContract();
-            BeanUtils.copyProperties(clientRequest, receiverContract);
-            receiverContract.setReceiver(receiver);
-            receiverContract.setUrl(url);
-            receiverContract.setSenderName(senderName);
-            this.sendMail(receiverContract, TOPIC_SIGN);
+            if(!receiver.getPermission().equals("read")) {
+                String url = String.format("%s/signDocument?c=%s&r=%s",
+                        hostname,
+                        contract.getId(), receiver.getId()
+                );
+                ReceiverContract receiverContract = new ReceiverContract();
+                BeanUtils.copyProperties(clientRequest, receiverContract);
+                receiverContract.setReceiver(receiver);
+                receiverContract.setUrl(url);
+                receiverContract.setSenderName(senderName);
+                this.sendMail(receiverContract, TOPIC_SIGN);
+            }
         });
 
 
@@ -167,7 +168,10 @@ public class DocumentServiceImpl implements DocumentService {
 
         UserContract userContract = new UserContract();
         userContract.setPrivateMessage(receiver.getPrivateMessage());
-        userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
+        if(receiver.getPermission().equals("read"))
+            userContract.setStatus(DocumentStatus.READ);
+         else if(receiver.getPermission().equals("sign"))
+            userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
         userContract.setUser(userSaved);
         return userContract;
     }
