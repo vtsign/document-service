@@ -123,6 +123,7 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
+
         UserContract userContract = this.findUserContractByContractIdAndUserId(contractId, userUUID);
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
@@ -141,7 +142,7 @@ public class ContractServiceImpl implements ContractService {
             userContract.setViewedDate(new Date());
             //sent email receiver viewed
             DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-            documentCommonMessage.setTitle("Viewed");
+            documentCommonMessage.setTitle(String.format("%s - Viewed",contract.getTitle()));
             User userView = userContract.getUser();
             Optional<UserContract> optionalUserContractOwner = contract.getUserContracts().stream()
                     .filter(UserContract::isOwner).findFirst();
@@ -186,7 +187,7 @@ public class ContractServiceImpl implements ContractService {
             Set<UserContract> userContracts = contract.getUserContracts();
             userContracts.forEach(uc -> {
                 DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-                documentCommonMessage.setTitle("Signed");
+                documentCommonMessage.setTitle(String.format("%s - Signed",contract.getTitle()));
                 User user = uc.getUser();
                 documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
                         user.getFullName(), user.getEmail(), contract.getTitle()));
@@ -221,7 +222,7 @@ public class ContractServiceImpl implements ContractService {
                         attachment.setName(document.getOriginName());
                         attachments.add(attachment);
                     });
-                    documentCommonMessage.setTitle("Signed");
+                    documentCommonMessage.setTitle(String.format("%s - Completed", contract.getTitle()));
                     documentCommonMessage.setAttachments(attachments);
                     documentCommonMessage.setMessage(
                             String.format("Tài liệu \"%s\" đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
@@ -244,6 +245,5 @@ public class ContractServiceImpl implements ContractService {
         user.setId(userUUID);
         return userDocumentRepository.countAllByUserAndStatus(user, status);
     }
-
 
 }
