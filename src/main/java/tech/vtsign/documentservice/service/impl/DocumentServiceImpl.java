@@ -59,8 +59,8 @@ public class DocumentServiceImpl implements DocumentService {
 
         for (Receiver receiver : clientRequest.getReceivers()) {
             if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())
-                    || receiver.getEmail()==null
-                    ||receiver.getEmail() != null && !Pattern.matches(regexEmail, receiver.getEmail())) {
+                    || receiver.getEmail() == null
+                    || receiver.getEmail() != null && !Pattern.matches(regexEmail, receiver.getEmail())) {
                 throw new InvalidFormatException("format of phone or mail does not correct ");
             }
         }
@@ -69,57 +69,66 @@ public class DocumentServiceImpl implements DocumentService {
         boolean success = true;
 
 
-            List<UserContract> userContracts = new ArrayList<>();
-            List<Document> documents = new ArrayList<>();
-            for (MultipartFile file : files) {
-                String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
-                String urlDocument = this.uploadFile(saveName, file.getBytes());
-                Document document = new Document(urlDocument);
-                document.setOriginName(file.getOriginalFilename());
-                document.setSaveName(saveName);
-                documents.add(document);
-            }
+        List<UserContract> userContracts = new ArrayList<>();
+        List<Document> documents = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
+            String urlDocument = this.uploadFile(saveName, file.getBytes());
+            Document document = new Document(urlDocument);
+            document.setOriginName(file.getOriginalFilename());
+            document.setSaveName(saveName);
+            documents.add(document);
+        }
 
-            User user = new User();
-            user.setId(senderInfo.getId());
-            user.setEmail(senderInfo.getEmail());
-            user.setPhone(senderInfo.getPhone());
-            user.setFirstName(senderInfo.getFirstName());
-            user.setLastName(senderInfo.getLastName());
-            User userSenderSaved = userRepository.save(user);
+        User user = new User();
+        user.setId(senderInfo.getId());
+        user.setEmail(senderInfo.getEmail());
+        user.setPhone(senderInfo.getPhone());
+        user.setFirstName(senderInfo.getFirstName());
+        user.setLastName(senderInfo.getLastName());
+        User userSenderSaved = userRepository.save(user);
 
-            Contract contract = new Contract();
-            contract.setTitle(clientRequest.getMailTitle());
-            contract.setSentDate(new Date());
-            contract.setLastModifiedDate(new Date());
-            contract.setDocuments(documents);
-            Contract contractSaved = contractRepository.save(contract);
+        Contract contract = new Contract();
+        contract.setTitle(clientRequest.getMailTitle());
+        contract.setSentDate(new Date());
+        contract.setLastModifiedDate(new Date());
+        contract.setDocuments(documents);
+        Contract contractSaved = contractRepository.save(contract);
 
-            UserContract userContract = new UserContract();
-            userContract.setStatus(DocumentStatus.WAITING);
-            userContract.setOwner(true);
-            userContract.setViewedDate(new Date());
-            userContract.setSignedDate(new Date());
+        UserContract userContract = new UserContract();
+        userContract.setStatus(DocumentStatus.WAITING);
+        userContract.setOwner(true);
+        userContract.setViewedDate(new Date());
+        userContract.setSignedDate(new Date());
 
-            userContract.setUser(userSenderSaved);
-            userContract.setContract(contractSaved);
-            userContracts.add(userContract);
+        userContract.setUser(userSenderSaved);
+        userContract.setContract(contractSaved);
+        userContracts.add(userContract);
 
-            for (Receiver receiver : clientRequest.getReceivers()) {
-                UserContract userContractTemp = this.getUserContract(receiver);
-                userContractTemp.setContract(contractSaved);
-                userContractTemp.setPermission(receiver.getPermission());
-                userContractTemp.setSecretKey(receiver.getKey());
-                userContractTemp.setPublicMessage(clientRequest.getMailMessage());
-                userContracts.add(userContractTemp);
-            }
-            userDocumentRepository.saveAll(userContracts);
+        for (Receiver receiver : clientRequest.getReceivers()) {
+            receiver.setPhone(this.replacePhone(receiver.getPhone()));
+            UserContract userContractTemp = this.getUserContract(receiver);
+            userContractTemp.setContract(contractSaved);
+            userContractTemp.setPermission(receiver.getPermission());
+            userContractTemp.setSecretKey(receiver.getKey());
+            userContractTemp.setPublicMessage(clientRequest.getMailMessage());
+            userContracts.add(userContractTemp);
+        }
+        userDocumentRepository.saveAll(userContracts);
 
-            this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
+        this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
 
 
         return success;
 
+    }
+
+    private String replacePhone(String phone) {
+        String result = phone;
+        if (phone.startsWith("0")) {
+            result = phone.replace("0", "+84");
+        }
+        return result;
     }
 
     @Override
@@ -133,7 +142,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName) {
         clientRequest.getReceivers().forEach(receiver -> {
-            if(!receiver.getPermission().equals("read")) {
+            if (!receiver.getPermission().equals("read")) {
                 String url = String.format("%s/signDocument?c=%s&r=%s",
                         hostname,
                         contract.getId(), receiver.getId()
@@ -158,19 +167,21 @@ public class DocumentServiceImpl implements DocumentService {
 
         User user = new User();
         String phone = receiver.getPhone() != null ? receiver.getPhone() : userReceiver.getPhone();
+
         user.setId(userReceiver.getId());
         user.setEmail(userReceiver.getEmail());
         user.setFirstName(userReceiver.getFirstName());
         user.setLastName(userReceiver.getLastName());
+
         receiver.setPhone(phone);
         user.setPhone(phone);
         User userSaved = userRepository.save(user);
 
         UserContract userContract = new UserContract();
         userContract.setPrivateMessage(receiver.getPrivateMessage());
-        if(receiver.getPermission().equals("read"))
+        if (receiver.getPermission().equals("read"))
             userContract.setStatus(DocumentStatus.READ);
-         else if(receiver.getPermission().equals("sign"))
+        else if (receiver.getPermission().equals("sign"))
             userContract.setStatus(DocumentStatus.ACTION_REQUIRE);
         userContract.setUser(userSaved);
         return userContract;

@@ -129,9 +129,9 @@ public class ContractServiceImpl implements ContractService {
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
-        Contract contract = userContract.getContract();
         if (userContract.getStatus().equals(DocumentStatus.SIGNED))
             throw new SignedException("A Contract was signed by this User");
+        Contract contract = userContract.getContract();
         UserContractResponse userContractResponse = new UserContractResponse();
 
         boolean lastSign = contract.getUserContracts().stream()
@@ -142,7 +142,7 @@ public class ContractServiceImpl implements ContractService {
             userContract.setViewedDate(new Date());
             //sent email receiver viewed
             DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-            documentCommonMessage.setTitle(String.format("%s - Viewed",contract.getTitle()));
+            documentCommonMessage.setTitle(String.format("%s - Viewed", contract.getTitle()));
             User userView = userContract.getUser();
             Optional<UserContract> optionalUserContractOwner = contract.getUserContracts().stream()
                     .filter(UserContract::isOwner).findFirst();
@@ -187,7 +187,7 @@ public class ContractServiceImpl implements ContractService {
             Set<UserContract> userContracts = contract.getUserContracts();
             userContracts.forEach(uc -> {
                 DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-                documentCommonMessage.setTitle(String.format("%s - Signed",contract.getTitle()));
+                documentCommonMessage.setTitle(String.format("%s - Signed", contract.getTitle()));
                 User user = uc.getUser();
                 documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
                         user.getFullName(), user.getEmail(), contract.getTitle()));
