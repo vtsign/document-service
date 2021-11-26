@@ -126,7 +126,7 @@ public class DocumentServiceImpl implements DocumentService {
     private String replacePhone(String phone) {
         String result = phone;
         if (phone.startsWith("0")) {
-            result = phone.replace("0", "+84");
+            result = phone.replaceFirst("0", "+84");
         }
         return result;
     }
