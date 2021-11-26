@@ -152,6 +152,7 @@ public class DocumentServiceImpl implements DocumentService {
                 receiverContract.setReceiver(receiver);
                 receiverContract.setUrl(url);
                 receiverContract.setSenderName(senderName);
+                receiverContract.setCreatedDate(contract.getSentDate());
                 this.sendMail(receiverContract, TOPIC_SIGN);
             }
         });
