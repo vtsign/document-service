@@ -190,6 +190,7 @@ public class ContractServiceImpl implements ContractService {
                 User user = uc.getUser();
                 documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
                         user.getFullName(), user.getEmail(), contract.getTitle()));
+                documentCommonMessage.setTo(user.getEmail());
                 documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
             });
 
@@ -225,6 +226,7 @@ public class ContractServiceImpl implements ContractService {
                     documentCommonMessage.setMessage(
                             String.format("Tài liệu \"%s\" đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
                                     contract.getTitle()));
+                    documentCommonMessage.setTo(uc.getUser().getEmail());
                     documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
 
                 });
