@@ -106,7 +106,8 @@ public class DocumentServiceImpl implements DocumentService {
         userContracts.add(userContract);
 
         for (Receiver receiver : clientRequest.getReceivers()) {
-            receiver.setPhone(this.replacePhone(receiver.getPhone()));
+            if (receiver.getPhone() != null)
+                receiver.setPhone(this.replacePhone(receiver.getPhone()));
             UserContract userContractTemp = this.getUserContract(receiver);
             userContractTemp.setContract(contractSaved);
             userContractTemp.setPermission(receiver.getPermission());
