@@ -24,10 +24,7 @@ import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
@@ -69,7 +66,7 @@ public class DocumentServiceImpl implements DocumentService {
         boolean success = true;
 
 
-        List<UserContract> userContracts = new ArrayList<>();
+        Set<UserContract> userContracts = new HashSet<>();
         List<Document> documents = new ArrayList<>();
         for (MultipartFile file : files) {
             String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
@@ -115,9 +112,10 @@ public class DocumentServiceImpl implements DocumentService {
             userContractTemp.setPublicMessage(clientRequest.getMailMessage());
             userContracts.add(userContractTemp);
         }
-        userDocumentRepository.saveAll(userContracts);
+        contractSaved.setUserContracts(userContracts);
+        List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
-        this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName());
+        this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContractList);
 
 
         return success;
@@ -141,15 +139,21 @@ public class DocumentServiceImpl implements DocumentService {
         documentProducer.sendMessage(object, topic);
     }
 
-    public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName) {
-        clientRequest.getReceivers().forEach(receiver -> {
-            if (!receiver.getPermission().equals("read")) {
-                String url = String.format("%s/signDocument?c=%s&r=%s",
+    public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName, List<UserContract> userContracts) {
+        System.out.println(userContracts.get(1).getId() + "---------------------------------->");
+        userContracts.forEach(uc -> {
+            User user = uc.getUser();
+            if (uc.getPermission() != null && uc.getPermission().equals("sign")) {
+                String url = String.format("%s/signDocument?c=%s&r=%s&uc=%s",
                         hostname,
-                        contract.getId(), receiver.getId()
+                        contract.getId(), user.getId(), uc.getId()
                 );
                 ReceiverContract receiverContract = new ReceiverContract();
                 BeanUtils.copyProperties(clientRequest, receiverContract);
+                Receiver receiver = new Receiver();
+                receiver.setName(user.getFullName());
+                receiver.setKey(uc.getSecretKey());
+                BeanUtils.copyProperties(user, receiver);
                 receiverContract.setReceiver(receiver);
                 receiverContract.setUrl(url);
                 receiverContract.setSenderName(senderName);
@@ -157,7 +161,6 @@ public class DocumentServiceImpl implements DocumentService {
                 this.sendMail(receiverContract, TOPIC_SIGN);
             }
         });
-
 
     }
 

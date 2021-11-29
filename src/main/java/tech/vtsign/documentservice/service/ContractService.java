@@ -22,9 +22,11 @@ public interface ContractService {
 
     Contract getContractById(UUID id);
 
-    UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, String secretKey);
+    UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, UUID userContractUUID, String secretKey);
 
     Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents);
 
     long countAllByUserAndStatus(UUID userUUID, String status);
+
+    UserContract findUserContractById(UUID userContractUUID);
 }

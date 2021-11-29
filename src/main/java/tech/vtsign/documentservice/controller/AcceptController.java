@@ -49,8 +49,9 @@ public class AcceptController {
     @GetMapping("/signing")
     public ResponseEntity<?> signByReceiver(@RequestParam("c") UUID contractId,
                                             @RequestParam("r") UUID receiverId,
+                                            @RequestParam("uc") UUID userContractUUID,
                                             @RequestParam("s") String secretKey) {
-        UserContractResponse userContractResponse = contractService.getUDRByContractIdAndUserId(contractId, receiverId, secretKey);
+        UserContractResponse userContractResponse = contractService.getUDRByContractIdAndUserId(contractId, receiverId, userContractUUID, secretKey);
         return ResponseEntity.ok(userContractResponse);
     }
 

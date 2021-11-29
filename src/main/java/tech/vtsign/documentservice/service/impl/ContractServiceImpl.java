@@ -56,6 +56,7 @@ public class ContractServiceImpl implements ContractService {
         }
     }
 
+
     @Override
     public UserContract findContractById(UUID contractUUID) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -122,9 +123,10 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, String secretKey) {
+    public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, UUID userContractUUID, String secretKey) {
 
-        UserContract userContract = this.findUserContractByContractIdAndUserId(contractId, userUUID);
+
+        UserContract userContract = this.findUserContractById(userContractUUID);
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
@@ -168,9 +170,9 @@ public class ContractServiceImpl implements ContractService {
         UserContract userContract = this.findUserContractByContractIdAndUserId(u.getContractId(), u.getUserId());
         User userSign = userContract.getUser();
         Contract contract = userContract.getContract();
-        Optional< UserContract> userContractOwnerOpt = contract.getUserContracts().stream().filter(UserContract::isOwner).findFirst();
-        User userOwner  =new User();
-        if(userContractOwnerOpt.isPresent()){
+        Optional<UserContract> userContractOwnerOpt = contract.getUserContracts().stream().filter(UserContract::isOwner).findFirst();
+        User userOwner = new User();
+        if (userContractOwnerOpt.isPresent()) {
             userOwner = userContractOwnerOpt.get().getUser();
         }
 
@@ -187,7 +189,6 @@ public class ContractServiceImpl implements ContractService {
             });
 
             // update contract status
-
 
 
             contract.setLastModifiedDate(new Date());
@@ -253,6 +254,13 @@ public class ContractServiceImpl implements ContractService {
         User user = new User();
         user.setId(userUUID);
         return userDocumentRepository.countAllByUserAndStatus(user, status);
+    }
+
+    @Override
+    public UserContract findUserContractById(UUID userContractUUID) {
+        Optional<UserContract> userContract = userDocumentRepository.findById(userContractUUID);
+
+        return userContract.orElseThrow(() -> new NotFoundException("UserContract Not Found"));
     }
 
 }

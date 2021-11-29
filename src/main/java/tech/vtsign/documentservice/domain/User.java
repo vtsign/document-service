@@ -33,6 +33,7 @@ public class User extends Auditable<String> implements Serializable {
     private Set<UserContract> userContracts;
 
     @Transient
+    @JsonProperty("full_name")
     public String getFullName() {
         return String.format("%s %s", this.firstName, this.lastName);
     }
