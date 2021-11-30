@@ -140,7 +140,6 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName, List<UserContract> userContracts) {
-        System.out.println(userContracts.get(1).getId() + "---------------------------------->");
         userContracts.forEach(uc -> {
             User user = uc.getUser();
             if (uc.getPermission() != null && uc.getPermission().equals("sign")) {

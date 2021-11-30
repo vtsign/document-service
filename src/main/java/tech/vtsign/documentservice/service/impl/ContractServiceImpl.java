@@ -114,8 +114,7 @@ public class ContractServiceImpl implements ContractService {
         UserContractResponse userContractResponse = new UserContractResponse();
 
         boolean lastSign = contract.getUserContracts().stream()
-                .filter(ud -> !ud.getStatus().equals(DocumentStatus.READ))
-                .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
+                .filter(ud -> (ud.getStatus().equals(DocumentStatus.SIGNED) || ud.getStatus().equals(DocumentStatus.READ)))
                 .count() == contract.getUserContracts().size() - 2;
         if (userContract.getViewedDate() == null) {
             userContract.setViewedDate(new Date());
@@ -190,7 +189,7 @@ public class ContractServiceImpl implements ContractService {
                 }
             }
             boolean completed = contract.getUserContracts().stream()
-                    .filter(ud -> ud.getStatus().equals(DocumentStatus.SIGNED))
+                    .filter(ud -> (ud.getStatus().equals(DocumentStatus.SIGNED) || ud.getStatus().equals(DocumentStatus.READ)))
                     .count() == contract.getUserContracts().size() - 1;
 
             if (completed) {
