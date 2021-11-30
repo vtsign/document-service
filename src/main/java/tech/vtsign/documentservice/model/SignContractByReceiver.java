@@ -17,6 +17,8 @@ public class SignContractByReceiver {
     private UUID contractId;
     @JsonProperty("user_uuid")
     private UUID userId;
+    @JsonProperty("user_contract_uuid")
+    private UUID userContractUUID;
     @JsonProperty("document_xfdfs")
     private List<DocumentXFDF> documentXFDFS = new ArrayList<>();
 }

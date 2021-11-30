@@ -167,7 +167,7 @@ public class ContractServiceImpl implements ContractService {
     @SneakyThrows
     @Override
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
-        UserContract userContract = this.findUserContractByContractIdAndUserId(u.getContractId(), u.getUserId());
+        UserContract userContract = this.findUserContractById(u.getUserContractUUID());
         User userSign = userContract.getUser();
         Contract contract = userContract.getContract();
         Optional<UserContract> userContractOwnerOpt = contract.getUserContracts().stream().filter(UserContract::isOwner).findFirst();
