@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface UserDocumentRepository extends JpaRepository<UserContract, UUID>, JpaSpecificationExecutor<UserContract> {
-    Optional<UserContract> findUserContractByContractAndUser(Contract contract, User user);
+    Optional<UserContract> findUserContractByContractAndUserAndId(Contract contract, User user, UUID userContractUUID);
 
     long countAllByUserAndStatus(User user, String status);
 }

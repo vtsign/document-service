@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,7 +17,6 @@ import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.UserDocumentRepository;
 import tech.vtsign.documentservice.repository.UserRepository;
-import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.*;
 
 import javax.persistence.criteria.*;
@@ -56,23 +54,6 @@ public class ContractServiceImpl implements ContractService {
         }
     }
 
-
-    @Override
-    public UserContract findContractById(UUID contractUUID) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
-        return findUserContractByContractIdAndUserId(contractUUID, senderInfo.getId());
-    }
-
-    @Override
-    public UserContract findUserContractByContractIdAndUserId(UUID contractUUID, UUID userUUID) {
-        Contract contract = new Contract();
-        contract.setId(contractUUID);
-        User user = new User();
-        user.setId(userUUID);
-        return userDocumentRepository.findUserContractByContractAndUser(contract, user)
-                .orElseThrow(() -> new NotFoundException("contract not found"));
-    }
 
     @Override
     public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int size) {
@@ -117,16 +98,12 @@ public class ContractServiceImpl implements ContractService {
 
     }
 
-    @Override
-    public Contract getContractById(UUID id) {
-        return contractRepository.getById(id);
-    }
 
     @Override
     public UserContractResponse getUDRByContractIdAndUserId(UUID contractId, UUID userUUID, UUID userContractUUID, String secretKey) {
 
 
-        UserContract userContract = this.findUserContractById(userContractUUID);
+        UserContract userContract = this.findUserContractById(contractId, userUUID, userContractUUID);
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
@@ -167,7 +144,7 @@ public class ContractServiceImpl implements ContractService {
     @SneakyThrows
     @Override
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
-        UserContract userContract = this.findUserContractById(u.getUserContractUUID());
+        UserContract userContract = this.findUserContractById(u.getContractId(), u.getUserId(), u.getUserContractUUID());
         User userSign = userContract.getUser();
         Contract contract = userContract.getContract();
         Optional<UserContract> userContractOwnerOpt = contract.getUserContracts().stream().filter(UserContract::isOwner).findFirst();
@@ -257,8 +234,12 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public UserContract findUserContractById(UUID userContractUUID) {
-        Optional<UserContract> userContract = userDocumentRepository.findById(userContractUUID);
+    public UserContract findUserContractById(UUID contractUUID, UUID userUUID, UUID userContractUUID) {
+        User user = new User();
+        user.setId(userUUID);
+        Contract contract = new Contract();
+        contract.setId(contractUUID);
+        Optional<UserContract> userContract = userDocumentRepository.findUserContractByContractAndUserAndId(contract, user, userContractUUID);
 
         return userContract.orElseThrow(() -> new NotFoundException("UserContract Not Found"));
     }

@@ -13,14 +13,8 @@ import java.util.UUID;
 public interface ContractService {
     Contract findContractByContractAndReceiver(UUID contractUUID, UUID receiverUUID);
 
-    UserContract findContractById(UUID contractUUID);
-
-    UserContract findUserContractByContractIdAndUserId(UUID contractUUID, UUID userUUID);
-
     Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int pageItems);
 
-
-    Contract getContractById(UUID id);
 
     UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, UUID userContractUUID, String secretKey);
 
@@ -28,5 +22,5 @@ public interface ContractService {
 
     long countAllByUserAndStatus(UUID userUUID, String status);
 
-    UserContract findUserContractById(UUID userContractUUID);
+    UserContract findUserContractById(UUID contractUUID, UUID userUUID, UUID userContractUUID);
 }
