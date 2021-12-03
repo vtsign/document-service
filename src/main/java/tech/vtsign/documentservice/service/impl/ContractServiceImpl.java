@@ -56,26 +56,31 @@ public class ContractServiceImpl implements ContractService {
 
 
     @Override
-    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int size) {
+    public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract,
+                                                             int page, int size, String sortField, String sortType) {
         Pageable pageable = PageRequest.of(page, size);
-        String sortName = "createdDate";
-        String status = userContract.getStatus();
-        if (status.equals(DocumentStatus.COMPLETED))
-            sortName = "completeDate";
-        else if (status.equals(DocumentStatus.DELETED))
-            sortName = "lastModifiedDate";
+        if(sortField == null) {
+            sortField = "createdDate";
+            String status = userContract.getStatus();
+            if (status.equals(DocumentStatus.COMPLETED))
+                sortField = "completeDate";
+            else if (status.equals(DocumentStatus.DELETED))
+                sortField = "lastModifiedDate";
+        }
 
-
-        String finalSortName = sortName;
+        String finalSortName = sortField;
         Page<UserContract> userContracts = userDocumentRepository.findAll(new Specification<UserContract>() {
             @Override
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
 
                 final Path<Contract> contractPath = root.get("contract");
-                criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get(finalSortName)));
+                if(sortType.equalsIgnoreCase("desc")) {
+                    criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get(finalSortName)));
+                } else {
+                    criteriaQuery.orderBy(criteriaBuilder.asc(contractPath.get(finalSortName)));
+                }
                 List<Predicate> predicates = new ArrayList<>();
                 if (contract.getTitle() != null) {
-
                     predicates.add(criteriaBuilder.and(criteriaBuilder.like(contractPath.get("title"), "%" + contract.getTitle() + "%")));
                 }
                 if (userContract.getStatus() != null) {

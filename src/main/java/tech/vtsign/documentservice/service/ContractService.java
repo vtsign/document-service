@@ -13,7 +13,8 @@ import java.util.UUID;
 public interface ContractService {
     Contract findContractByContractAndReceiver(UUID contractUUID, UUID receiverUUID);
 
-    Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract, int page, int pageItems);
+    Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract,
+                                                      int page, int pageItems, String sortField, String sortType);
 
 
     UserContractResponse getUDRByContractIdAndUserId(UUID contractUUID, UUID userUUID, UUID userContractUUID, String secretKey);

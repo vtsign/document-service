@@ -86,13 +86,16 @@ public class DocumentController {
     public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract, Contract contract,
                                                       @RequestParam(value = "page", required = false, defaultValue = "1") int page,
                                                       @RequestParam(value = "size", required = false, defaultValue = "4") int size,
+                                                      @RequestParam(value = "sortField", required = false) String sortField,
+                                                      @RequestParam(value = "sortType", required = false, defaultValue = "desc") String sortType,
                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
         User user = new User();
         user.setId(userInfo.getId());
         usercontract.setUser(user);
-        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract, contract, page - 1, size);
+        Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract, contract,
+                                                                                page - 1, size, sortField, sortType);
         List<Contract> contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
         Map<String, Object> result = new HashMap<>();
         result.put("total_items", userContractPage.getTotalElements());
