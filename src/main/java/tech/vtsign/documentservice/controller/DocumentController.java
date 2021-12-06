@@ -22,10 +22,7 @@ import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.exception.MissingFieldException;
 import tech.vtsign.documentservice.exception.NotFoundException;
-import tech.vtsign.documentservice.model.DocumentClientRequest;
-import tech.vtsign.documentservice.model.DocumentStatus;
-import tech.vtsign.documentservice.model.LoginServerResponseDto;
-import tech.vtsign.documentservice.model.SignContractByReceiver;
+import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentService;
@@ -153,5 +150,65 @@ public class DocumentController {
         result.put(DocumentStatus.ACTION_REQUIRE, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.ACTION_REQUIRE));
         result.put(DocumentStatus.DELETED, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.DELETED));
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Delete contract")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = @Content
+            ),
+            @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
+                    })
+    })
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteContract(@RequestBody UserContractRequest userContractRequest,
+                                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
+        UserContract userContract = contractService
+                .deleteContractById(userInfo.getId(), userContractRequest.getContractId(), userContractRequest.getUserContractId());
+        return ResponseEntity.ok(userContract);
+    }
+
+    @Operation(summary = "Restore contract")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success contract restored",
+                    content = @Content
+            ),
+            @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
+                    })
+    })
+    @PostMapping("/restore")
+    public ResponseEntity<?> restoreContract(@RequestBody UserContractRequest userContractRequest,
+                                             @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
+        UserContract userContract = contractService
+                .restoreContractById(userInfo.getId(), userContractRequest.getContractId(), userContractRequest.getUserContractId());
+        return ResponseEntity.ok(userContract);
+    }
+
+    @Operation(summary = "Hidden contract")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success contract hidden",
+                    content = @Content
+            ),
+            @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
+                    })
+    })
+    @DeleteMapping("/hidden")
+    public ResponseEntity<?> hiddenContract(@RequestBody UserContractRequest userContractRequest,
+                                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
+        UserContract userContract = contractService
+                .hiddenContractById(userInfo.getId(), userContractRequest.getContractId(), userContractRequest.getUserContractId());
+        return ResponseEntity.ok(userContract);
     }
 }

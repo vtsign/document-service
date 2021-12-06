@@ -24,4 +24,10 @@ public interface ContractService {
     long countAllByUserAndStatus(UUID userUUID, String status);
 
     UserContract findUserContractById(UUID contractUUID, UUID userUUID, UUID userContractUUID);
+
+    UserContract deleteContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+
+    UserContract hiddenContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+
+    UserContract restoreContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
 }

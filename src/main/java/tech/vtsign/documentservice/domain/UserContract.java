@@ -24,6 +24,9 @@ public class UserContract extends Auditable<String> implements Serializable {
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "user_contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
+    @JsonProperty("pre_status")
+    @JsonIgnore
+    private String preStatus;
     private String status;
     private String permission;
     @JsonIgnore

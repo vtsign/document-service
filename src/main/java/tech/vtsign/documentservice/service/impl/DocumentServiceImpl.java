@@ -52,7 +52,7 @@ public class DocumentServiceImpl implements DocumentService {
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
         String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
         String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
-
+        log.info("[createUserDocument] receive request from client {}, file size: {}", clientRequest, files.size());
 
         for (Receiver receiver : clientRequest.getReceivers()) {
             if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())

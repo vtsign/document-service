@@ -110,11 +110,16 @@ public class ContractServiceImpl implements ContractService {
 
         UserContract userContract = this.findUserContractById(contractId, userUUID, userContractUUID);
 
-        if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
+        String status = userContract.getStatus();
+        if (status.equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
-        if (userContract.getStatus().equals(DocumentStatus.SIGNED))
+        if (status.equals(DocumentStatus.SIGNED)) {
             throw new SignedException("A Contract was signed by this User");
+        }
+        if(status.equals(DocumentStatus.DELETED)||status.equals(DocumentStatus.HIDDEN)) {
+            throw new NotFoundException("Contract has been deleted by this User");
+        }
         Contract contract = userContract.getContract();
         UserContractResponse userContractResponse = new UserContractResponse();
 
@@ -149,6 +154,9 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
         UserContract userContract = this.findUserContractById(u.getContractId(), u.getUserId(), u.getUserContractUUID());
+        String status = userContract.getStatus();
+        if(status.equals(DocumentStatus.DELETED)||status.equals(DocumentStatus.HIDDEN))
+            throw new NotFoundException("Contract has been deleted by this User");
         User userSign = userContract.getUser();
         Contract contract = userContract.getContract();
         Optional<UserContract> userContractOwnerOpt = contract.getUserContracts().stream().filter(UserContract::isOwner).findFirst();
@@ -245,7 +253,43 @@ public class ContractServiceImpl implements ContractService {
         contract.setId(contractUUID);
         Optional<UserContract> userContract = userDocumentRepository.findUserContractByContractAndUserAndId(contract, user, userContractUUID);
 
-        return userContract.orElseThrow(() -> new NotFoundException("UserContract Not Found"));
+        return userContract.orElseThrow(() -> new NotFoundException("Not found contract or user or user do not own this contract"));
     }
+
+    @Override
+    public UserContract deleteContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
+        UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        try {
+            userContract.setPreStatus(userContract.getStatus());
+            userContract.setStatus(DocumentStatus.DELETED);
+
+        }catch (Exception e){
+            throw new RuntimeException("Could not deleted contract, server missing an error when process your request");
+        }
+        return userContract;
+    }
+
+    @Override
+    public UserContract hiddenContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
+        UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        try {
+            userContract.setStatus(DocumentStatus.HIDDEN);
+        }catch (Exception e){
+            throw new RuntimeException("Could not hidden contract, server missing an error when process your request");
+        }
+        return userContract;
+    }
+    @Override
+    public UserContract restoreContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
+        UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        try {
+            userContract.setStatus(userContract.getPreStatus());
+        }catch (Exception e){
+            throw new RuntimeException("Could not restore contract, server missing an error when process your request");
+        }
+        return userContract;
+    }
+
+
 
 }

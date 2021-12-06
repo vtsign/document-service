@@ -37,7 +37,7 @@ public class AcceptController {
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
-            @ApiResponse(responseCode = "404", description = "Not found contract",
+            @ApiResponse(responseCode = "404", description = "Not found contract or contract being deleted",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
