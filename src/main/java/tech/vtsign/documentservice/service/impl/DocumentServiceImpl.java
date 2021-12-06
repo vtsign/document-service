@@ -152,6 +152,7 @@ public class DocumentServiceImpl implements DocumentService {
                 Receiver receiver = new Receiver();
                 receiver.setName(user.getFullName());
                 receiver.setKey(uc.getSecretKey());
+                receiver.setPrivateMessage(uc.getPrivateMessage());
                 BeanUtils.copyProperties(user, receiver);
                 receiverContract.setReceiver(receiver);
                 receiverContract.setUrl(url);

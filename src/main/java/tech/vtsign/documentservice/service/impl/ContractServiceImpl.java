@@ -59,7 +59,7 @@ public class ContractServiceImpl implements ContractService {
     public Page<UserContract> findContractsByUserIdAndStatus(UserContract userContract, Contract contract,
                                                              int page, int size, String sortField, String sortType) {
         Pageable pageable = PageRequest.of(page, size);
-        if(sortField == null) {
+        if (sortField == null) {
             sortField = "createdDate";
             String status = userContract.getStatus();
             if (status.equals(DocumentStatus.COMPLETED))
@@ -74,7 +74,7 @@ public class ContractServiceImpl implements ContractService {
             public Predicate toPredicate(Root<UserContract> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
 
                 final Path<Contract> contractPath = root.get("contract");
-                if(sortType.equalsIgnoreCase("desc")) {
+                if (sortType.equalsIgnoreCase("desc")) {
                     criteriaQuery.orderBy(criteriaBuilder.desc(contractPath.get(finalSortName)));
                 } else {
                     criteriaQuery.orderBy(criteriaBuilder.asc(contractPath.get(finalSortName)));
@@ -117,7 +117,7 @@ public class ContractServiceImpl implements ContractService {
         if (status.equals(DocumentStatus.SIGNED)) {
             throw new SignedException("A Contract was signed by this User");
         }
-        if(status.equals(DocumentStatus.DELETED)||status.equals(DocumentStatus.HIDDEN)) {
+        if (status.equals(DocumentStatus.DELETED) || status.equals(DocumentStatus.HIDDEN)) {
             throw new NotFoundException("Contract has been deleted by this User");
         }
         Contract contract = userContract.getContract();
@@ -155,7 +155,7 @@ public class ContractServiceImpl implements ContractService {
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
         UserContract userContract = this.findUserContractById(u.getContractId(), u.getUserId(), u.getUserContractUUID());
         String status = userContract.getStatus();
-        if(status.equals(DocumentStatus.DELETED)||status.equals(DocumentStatus.HIDDEN))
+        if (status.equals(DocumentStatus.DELETED) || status.equals(DocumentStatus.HIDDEN))
             throw new NotFoundException("Contract has been deleted by this User");
         User userSign = userContract.getUser();
         Contract contract = userContract.getContract();
@@ -259,11 +259,14 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public UserContract deleteContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
         UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        if (userContract.getStatus().equals(DocumentStatus.DELETED) || userContract.getStatus().equals(DocumentStatus.HIDDEN)) {
+            throw new InvalidFormatException("Contract cannot delete by user");
+        }
         try {
             userContract.setPreStatus(userContract.getStatus());
             userContract.setStatus(DocumentStatus.DELETED);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Could not deleted contract, server missing an error when process your request");
         }
         return userContract;
@@ -272,24 +275,30 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public UserContract hiddenContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
         UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        if (!userContract.getStatus().equals(DocumentStatus.DELETED)) {
+            throw new InvalidFormatException("Contract cannot hidden user");
+        }
         try {
             userContract.setStatus(DocumentStatus.HIDDEN);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Could not hidden contract, server missing an error when process your request");
         }
         return userContract;
     }
+
     @Override
     public UserContract restoreContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID) {
         UserContract userContract = findUserContractById(contractUUID, userUUID, userContractUUID);
+        if (!userContract.getStatus().equals(DocumentStatus.DELETED)) {
+            throw new InvalidFormatException("Contract cannot restore by user");
+        }
         try {
             userContract.setStatus(userContract.getPreStatus());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Could not restore contract, server missing an error when process your request");
         }
         return userContract;
     }
-
 
 
 }
