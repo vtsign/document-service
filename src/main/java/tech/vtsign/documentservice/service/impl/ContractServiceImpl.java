@@ -153,6 +153,7 @@ public class ContractServiceImpl implements ContractService {
     @SneakyThrows
     @Override
     public Boolean signContractByUser(SignContractByReceiver u, List<MultipartFile> documents) {
+
         UserContract userContract = this.findUserContractById(u.getContractId(), u.getUserId(), u.getUserContractUUID());
         String status = userContract.getStatus();
         if (status.equals(DocumentStatus.DELETED) || status.equals(DocumentStatus.HIDDEN))

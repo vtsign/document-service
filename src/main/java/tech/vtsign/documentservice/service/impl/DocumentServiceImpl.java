@@ -13,6 +13,7 @@ import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.exception.InvalidFormatException;
+import tech.vtsign.documentservice.exception.LockedException;
 import tech.vtsign.documentservice.model.*;
 import tech.vtsign.documentservice.proxy.UserServiceProxy;
 import tech.vtsign.documentservice.repository.ContractRepository;
@@ -23,6 +24,7 @@ import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
+import tech.vtsign.documentservice.utils.TransactionConstant;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -46,10 +48,17 @@ public class DocumentServiceImpl implements DocumentService {
     private String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
+    @Value("${tech.vtsign.zalopay.amount}")
+    private long amount = 5000;
 
     @SneakyThrows
     @Override
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
+
+
         String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
         String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
         log.info("[createUserDocument] receive request from client {}, file size: {}", clientRequest, files.size());
@@ -61,11 +70,7 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new InvalidFormatException("format of phone or mail does not correct ");
             }
         }
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
         boolean success = true;
-
-
         Set<UserContract> userContracts = new HashSet<>();
         List<Document> documents = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -116,10 +121,15 @@ public class DocumentServiceImpl implements DocumentService {
         List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
         this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContractList);
-
-
-        return success;
-
+        Item item = new Item();
+        item.setUserId(senderInfo.getId());
+        item.setAmount(amount);
+        item.setStatus(TransactionConstant.PAYMENT_STATUS);
+        Boolean rs =  userServiceProxy.paymentForSendDocument(item);
+        if(!rs){
+            throw new LockedException("Balance not enough to send documents ");
+        }
+        return rs;
     }
 
     private String replacePhone(String phone) {

@@ -8,3 +8,7 @@ server:
   port: 8300
   servlet:
     context-path: /document
+tech:
+  vtsign:
+    zalopay:
+      amount: 1000
