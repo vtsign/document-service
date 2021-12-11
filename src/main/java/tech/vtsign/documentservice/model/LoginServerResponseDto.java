@@ -23,6 +23,8 @@ public class LoginServerResponseDto {
     private String address;
     private boolean enabled;
     private boolean blocked;
+    private long balance;
+    private String avatar;
     private List<Role> roles;
     private List<Permission> permissions;
 
