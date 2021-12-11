@@ -58,6 +58,14 @@ public class DocumentServiceImpl implements DocumentService {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
 
+        Item item = new Item();
+        item.setUserId(senderInfo.getId());
+        item.setAmount(amount);
+        item.setStatus(TransactionConstant.PAYMENT_STATUS);
+        Boolean rs =  userServiceProxy.paymentForSendDocument(item);
+        if(!rs){
+            throw new LockedException("Balance not enough to send documents ");
+        }
 
         String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
         String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
@@ -121,15 +129,9 @@ public class DocumentServiceImpl implements DocumentService {
         List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
         this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContractList);
-        Item item = new Item();
-        item.setUserId(senderInfo.getId());
-        item.setAmount(amount);
-        item.setStatus(TransactionConstant.PAYMENT_STATUS);
-        Boolean rs =  userServiceProxy.paymentForSendDocument(item);
-        if(!rs){
-            throw new LockedException("Balance not enough to send documents ");
-        }
-        return rs;
+
+
+        return success;
     }
 
     private String replacePhone(String phone) {
