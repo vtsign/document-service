@@ -51,6 +51,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${tech.vtsign.zalopay.amount}")
     private final long amount = 5000;
 
+    String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
+    String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+
     @SneakyThrows
     @Override
     public boolean createUserDocument(DocumentClientRequest clientRequest, List<MultipartFile> files) {
@@ -67,9 +70,6 @@ public class DocumentServiceImpl implements DocumentService {
             throw new LockedException("Balance not enough to send documents ");
         }
 
-
-        String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
-        String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
         log.info("[createUserDocument] receive request from client {}, file size: {}", clientRequest, files.size());
 
         for (Receiver receiver : clientRequest.getReceivers()) {
@@ -135,6 +135,106 @@ public class DocumentServiceImpl implements DocumentService {
 
         return success;
     }
+
+    //    begin NHAN
+    @SneakyThrows
+    @Override
+    public boolean createUserDocument2(DocumentClientRequest clientRequest, List<MultipartFile> files) {
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LoginServerResponseDto senderInfo = userDetails.getLoginServerResponseDto();
+
+        log.info("[createUserDocument] receive request from client {}, file size: {}", clientRequest, files.size());
+
+        for (Receiver receiver : clientRequest.getReceivers()) {
+            if (receiver.getPhone() != null && !Pattern.matches(regexPhone, receiver.getPhone())
+                    || receiver.getEmail() == null
+                    || receiver.getEmail() != null && !Pattern.matches(regexEmail, receiver.getEmail())) {
+                throw new InvalidFormatException("format of phone or mail does not correct ");
+            }
+        }
+
+        boolean success = true;
+        Set<UserContract> userContracts = new HashSet<>();
+        List<Document> documents = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String saveName = String.format("%s-%s", UUID.randomUUID(), file.getOriginalFilename());
+            String urlDocument = this.uploadFile(saveName, file.getBytes());
+            Document document = new Document(urlDocument);
+            document.setOriginName(file.getOriginalFilename());
+            document.setSaveName(saveName);
+            documents.add(document);
+        }
+
+        User user = new User();
+        user.setId(senderInfo.getId());
+        user.setEmail(senderInfo.getEmail());
+        user.setPhone(senderInfo.getPhone());
+        user.setFirstName(senderInfo.getFirstName());
+        user.setLastName(senderInfo.getLastName());
+        User userSenderSaved = userRepository.save(user);
+
+        Contract contract = new Contract();
+        contract.setTitle(clientRequest.getMailTitle());
+        contract.setSentDate(new Date());
+        contract.setLastModifiedDate(new Date());
+        contract.setDocuments(documents);
+        Contract contractSaved = contractRepository.save(contract);
+
+        UserContract userContract = new UserContract();
+        userContract.setStatus(DocumentStatus.WAITING);
+        userContract.setOwner(true);
+        userContract.setViewedDate(new Date());
+        userContract.setSignedDate(new Date());
+
+        userContract.setUser(userSenderSaved);
+        userContract.setContract(contractSaved);
+        userContracts.add(userContract);
+
+        for (Receiver receiver : clientRequest.getReceivers()) {
+            if (receiver.getPhone() != null)
+                receiver.setPhone(this.replacePhone(receiver.getPhone()));
+            UserContract userContractTemp = this.getUserContract(receiver);
+            userContractTemp.setContract(contractSaved);
+            userContractTemp.setPermission(receiver.getPermission());
+            userContractTemp.setSecretKey(receiver.getKey());
+            userContractTemp.setPublicMessage(clientRequest.getMailMessage());
+            userContracts.add(userContractTemp);
+        }
+        contractSaved.setUserContracts(userContracts);
+        List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
+
+        this.sendEmailSign2(contractSaved, clientRequest, senderInfo.getFullName(), userContractList);
+
+
+        return success;
+    }
+
+    public void sendEmailSign2(Contract contract, DocumentClientRequest clientRequest, String senderName, List<UserContract> userContracts) {
+        userContracts.forEach(uc -> {
+            User user = uc.getUser();
+            if (uc.getPermission() != null && uc.getPermission().equals("sign")) {
+                String url = String.format("%s/signDocument?c=%s&r=%s&uc=%s",
+                        "https://qlda02.herokuapp.com",
+                        contract.getId(), user.getId(), uc.getId()
+                );
+                ReceiverContract receiverContract = new ReceiverContract();
+                BeanUtils.copyProperties(clientRequest, receiverContract);
+                Receiver receiver = new Receiver();
+                receiver.setName(user.getFullName());
+                receiver.setKey(uc.getSecretKey());
+                receiver.setPrivateMessage(uc.getPrivateMessage());
+                BeanUtils.copyProperties(user, receiver);
+                receiverContract.setReceiver(receiver);
+                receiverContract.setUrl(url);
+                receiverContract.setSenderName(senderName);
+                receiverContract.setCreatedDate(contract.getSentDate());
+                this.sendMail(receiverContract, TOPIC_SIGN);
+            }
+        });
+
+    }
+//    end NHAN
 
     private String replacePhone(String phone) {
         String result = phone;

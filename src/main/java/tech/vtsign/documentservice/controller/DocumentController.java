@@ -1,6 +1,7 @@
 package tech.vtsign.documentservice.controller;
 
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -61,6 +62,30 @@ public class DocumentController {
         boolean success = documentService.createUserDocument(documentClientRequests, files);
         return ResponseEntity.ok(success);
     }
+
+    //    begin NHAN
+    @Hidden
+    @Operation(summary = "Post client files and receivers")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success server will sent email to contact",
+                    content = @Content
+            )
+    })
+    @PostMapping(value = "/signing2")
+    public ResponseEntity<Boolean> signing2(@Validated @RequestPart("data") DocumentClientRequest documentClientRequests,
+                                            @RequestPart("files") List<MultipartFile> files,
+                                            BindingResult result) {
+        if (result.hasErrors()) {
+            String errorMessage = result.getAllErrors()
+                    .stream().map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining(";"));
+
+            throw new MissingFieldException(errorMessage);
+        }
+        boolean success = documentService.createUserDocument2(documentClientRequests, files);
+        return ResponseEntity.ok(success);
+    }
+    //    end NHAN
 
     @Operation(summary = "Get list contract by status", description = "DRAFT\n" +
             "SENT\n" +
