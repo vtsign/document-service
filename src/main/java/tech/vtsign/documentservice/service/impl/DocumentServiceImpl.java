@@ -43,13 +43,13 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Value("${tech.vtsign.hostname}")
-    private String hostname = "http://localhost/";
+    private final String hostname = "http://localhost/";
     @Value("${server.servlet.context-path}")
-    private String contextPath = "/document";
+    private final String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
     @Value("${tech.vtsign.zalopay.amount}")
-    private long amount = 5000;
+    private final long amount = 5000;
 
     @SneakyThrows
     @Override
@@ -60,12 +60,13 @@ public class DocumentServiceImpl implements DocumentService {
 
         Item item = new Item();
         item.setUserId(senderInfo.getId());
-        item.setAmount(amount);
+        item.setAmount(amount * clientRequest.getReceivers().size());
         item.setStatus(TransactionConstant.PAYMENT_STATUS);
         Boolean rs =  userServiceProxy.paymentForSendDocument(item);
         if(!rs){
             throw new LockedException("Balance not enough to send documents ");
         }
+
 
         String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
         String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
@@ -78,6 +79,7 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new InvalidFormatException("format of phone or mail does not correct ");
             }
         }
+
         boolean success = true;
         Set<UserContract> userContracts = new HashSet<>();
         List<Document> documents = new ArrayList<>();

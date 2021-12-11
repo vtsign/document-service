@@ -11,4 +11,4 @@ server:
 tech:
   vtsign:
     zalopay:
-      amount: 1000
+      amount: 5000
