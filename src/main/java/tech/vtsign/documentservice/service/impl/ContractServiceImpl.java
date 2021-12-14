@@ -210,7 +210,8 @@ public class ContractServiceImpl implements ContractService {
                 contract.setSigned(true);
                 contract.setCompleteDate(new Date());
                 contract.getDocuments().forEach(document -> {
-                    document.getXfdfs().clear();
+                    xfdfService.deleteAllByDocumentId(document.getId());
+//                    document.getXfdfs().clear();
                 });
                 userContracts.forEach(uc -> {
                     uc.setStatus(DocumentStatus.COMPLETED);

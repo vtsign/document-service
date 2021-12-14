@@ -6,4 +6,5 @@ import tech.vtsign.documentservice.domain.XFDF;
 import java.util.UUID;
 
 public interface XFDFRepository extends JpaRepository<XFDF, UUID> {
+    void deleteAllByDocumentId(UUID documentId);
 }
