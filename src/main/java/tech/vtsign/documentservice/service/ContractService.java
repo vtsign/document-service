@@ -3,6 +3,7 @@ package tech.vtsign.documentservice.service;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
+import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.model.UserContractResponse;
@@ -30,4 +31,8 @@ public interface ContractService {
     UserContract hiddenContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
 
     UserContract restoreContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+    User findUserById(UUID userUUID);
+    User updateUser(User user);
+    User saveUser(User user);
+
 }

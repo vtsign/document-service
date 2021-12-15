@@ -3,6 +3,7 @@ package tech.vtsign.documentservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -209,9 +210,11 @@ public class ContractServiceImpl implements ContractService {
             if (completed) {
                 contract.setSigned(true);
                 contract.setCompleteDate(new Date());
-                contract.getDocuments().forEach(document -> {
+                List<Document> documentList = contract.getDocuments();
+                documentList.forEach(document -> {
                     document.getXfdfs().clear();
                 });
+                contract.setDocuments(documentList);
                 userContracts.forEach(uc -> {
                     uc.setStatus(DocumentStatus.COMPLETED);
                     DocumentCommonMessage documentCommonMessageCp = new DocumentCommonMessage();
@@ -301,5 +304,23 @@ public class ContractServiceImpl implements ContractService {
         return userContract;
     }
 
+    @Override
+    public User findUserById(UUID userUUID) {
+        return userRepository.findById(userUUID).orElseThrow(()->new NotFoundException("User not found"));
+    }
+
+    @Override
+    public User updateUser(User user) {
+        User userUpdate = this.findUserById(user.getId());
+        BeanUtils.copyProperties(user, userUpdate);
+        return userRepository.save(userUpdate);
+    }
+
+    @Override
+    public User saveUser(User user) {
+        User userSave = new User();
+        BeanUtils.copyProperties(user, userSave);
+        return userRepository.save(userSave);
+    }
 
 }

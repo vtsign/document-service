@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
+
 public class User extends Auditable<String> implements Serializable {
     @Id
     @Column(name = "user_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
