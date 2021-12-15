@@ -210,11 +210,11 @@ public class ContractServiceImpl implements ContractService {
             if (completed) {
                 contract.setSigned(true);
                 contract.setCompleteDate(new Date());
-                List<Document> documentList = contract.getDocuments();
-                documentList.forEach(document -> {
-                    document.getXfdfs().clear();
+
+                contract.getDocuments().forEach(document -> {
+                    xfdfService.deleteAllByDocumentId(document.getId());
+//                    document.getXfdfs().clear();
                 });
-                contract.setDocuments(documentList);
                 userContracts.forEach(uc -> {
                     uc.setStatus(DocumentStatus.COMPLETED);
                     DocumentCommonMessage documentCommonMessageCp = new DocumentCommonMessage();
