@@ -43,13 +43,13 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Value("${tech.vtsign.hostname}")
-    private final String hostname;
+    private String hostname;
     @Value("${server.servlet.context-path}")
-    private final String contextPath = "/document";
+    private String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
     @Value("${tech.vtsign.zalopay.amount}")
-    private final long amount = 5000;
+    private long amount = 5000;
 
     String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
     String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
