@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
+import tech.vtsign.documentservice.model.ContractStatisticDto;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.model.UserContractResponse;
 
@@ -42,5 +43,7 @@ public interface ContractService {
     Long countAllContract(LocalDateTime startDate, LocalDateTime endDate);
 
     Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate);
+
+    ContractStatisticDto getStatistic(String type);
 
 }

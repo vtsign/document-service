@@ -19,6 +19,7 @@ import tech.vtsign.documentservice.repository.ContractRepository;
 import tech.vtsign.documentservice.repository.UserDocumentRepository;
 import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.service.*;
+import tech.vtsign.documentservice.utils.DateUtil;
 
 import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
@@ -332,6 +333,29 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate) {
         return contractRepository.countAllContractByCompleteDateNotNullAndCompleteDateBetween(startDate, endDate);
+    }
+
+    @Override
+    public ContractStatisticDto getStatistic(String type) {
+        try {
+            ContractStatisticDto contractStatisticDto = new ContractStatisticDto();
+            List<StatisticDto> sent = new ArrayList<>();
+            List<StatisticDto> completed = new ArrayList<>();
+            Map<String, LocalDateTime[]> dates = DateUtil.getListLocalDateTime(type);
+            for (Map.Entry<String, LocalDateTime[]> entry : dates.entrySet()) {
+                LocalDateTime startDate = entry.getValue()[0];
+                LocalDateTime endDate = entry.getValue()[1];
+                Long countAllContract = countAllContract(startDate, endDate);
+                Long countAllContractCompleted = countAllContractCompleted(startDate, endDate);
+                sent.add(new StatisticDto(entry.getKey(), countAllContract));
+                completed.add(new StatisticDto(entry.getKey(), countAllContractCompleted));
+            }
+            contractStatisticDto.setSent(sent);
+            contractStatisticDto.setCompleted(completed);
+            return contractStatisticDto;
+        } catch (IllegalArgumentException e) {
+            throw new NotFoundException("Type is not valid");
+        }
     }
 
 }

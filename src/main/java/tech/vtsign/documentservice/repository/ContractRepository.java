@@ -10,6 +10,5 @@ import java.util.UUID;
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, UUID> {
     Long countAllContractByCompleteDateNotNullAndCompleteDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-
-    long countAllByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+    Long countAllByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 }
