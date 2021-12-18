@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -16,5 +16,5 @@ public class ReceiverContract {
     private String mailTitle;
     private String url;
     private String senderName;
-    private Date createdDate;
+    private LocalDateTime createdDate;
 }

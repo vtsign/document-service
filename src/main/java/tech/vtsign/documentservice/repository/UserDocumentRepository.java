@@ -15,6 +15,4 @@ public interface UserDocumentRepository extends JpaRepository<UserContract, UUID
     Optional<UserContract> findUserContractByContractAndUserAndId(Contract contract, User user, UUID userContractUUID);
 
     long countAllByUserAndStatus(User user, String status);
-
-    long countAllByContractAndStatus(Contract contract, String status);
 }

@@ -117,7 +117,7 @@ public class DocumentController {
         user.setId(userInfo.getId());
         usercontract.setUser(user);
         Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract, contract,
-                                                                                page - 1, size, sortField, sortType);
+                page - 1, size, sortField, sortType);
         List<Contract> contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
         Map<String, Object> result = new HashMap<>();
         result.put("total_items", userContractPage.getTotalElements());

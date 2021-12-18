@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +15,6 @@ import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.exception.ExceptionResponse;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.model.UserContractResponse;
-import tech.vtsign.documentservice.model.UserUpdateDto;
 import tech.vtsign.documentservice.service.ContractService;
 
 import java.io.IOException;
@@ -79,13 +77,14 @@ public class AcceptController {
 
     @Hidden
     @PutMapping("/update-user")
-    public User updateUser(@RequestBody User user){
+    public User updateUser(@RequestBody User user) {
         return contractService.updateUser(user);
 
     }
+
     @Hidden
     @PostMapping("/save-user")
-    public User saveUser(@RequestBody User user){
+    public User saveUser(@RequestBody User user) {
         return contractService.saveUser(user);
 
     }

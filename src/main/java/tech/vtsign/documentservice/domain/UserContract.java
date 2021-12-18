@@ -8,7 +8,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -31,13 +31,13 @@ public class UserContract extends Auditable<String> implements Serializable {
     @JsonIgnore
     private String secretKey;
     @JsonProperty("viewed_date")
-    private Date viewedDate;
+    private LocalDateTime viewedDate;
     @JsonProperty("private_message")
     private String privateMessage;
     @JsonProperty("public_message")
     private String publicMessage;
     @JsonProperty("signed_date")
-    private Date signedDate;
+    private LocalDateTime signedDate;
 
     private boolean owner = false;
 

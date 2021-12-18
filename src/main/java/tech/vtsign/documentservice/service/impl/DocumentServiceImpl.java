@@ -26,6 +26,7 @@ import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
 import tech.vtsign.documentservice.utils.TransactionConstant;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -40,8 +41,8 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserDocumentRepository userDocumentRepository;
     private final UserRepository userRepository;
-
-
+    String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
+    String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
     @Value("${tech.vtsign.hostname}")
     private String hostname;
     @Value("${server.servlet.context-path}")
@@ -50,9 +51,6 @@ public class DocumentServiceImpl implements DocumentService {
     private String TOPIC_SIGN;
     @Value("${tech.vtsign.zalopay.amount}")
     private long amount = 5000;
-
-    String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
-    String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
 
     @SneakyThrows
     @Override
@@ -65,8 +63,8 @@ public class DocumentServiceImpl implements DocumentService {
         item.setUserId(senderInfo.getId());
         item.setAmount(amount * clientRequest.getReceivers().size());
         item.setStatus(TransactionConstant.PAYMENT_STATUS);
-        Boolean rs =  userServiceProxy.paymentForSendDocument(item);
-        if(!rs){
+        Boolean rs = userServiceProxy.paymentForSendDocument(item);
+        if (!rs) {
             throw new LockedException("Balance not enough to send documents ");
         }
 
@@ -102,16 +100,16 @@ public class DocumentServiceImpl implements DocumentService {
 
         Contract contract = new Contract();
         contract.setTitle(clientRequest.getMailTitle());
-        contract.setSentDate(new Date());
-        contract.setLastModifiedDate(new Date());
+        contract.setSentDate(LocalDateTime.now());
+        contract.setLastModifiedDate(LocalDateTime.now());
         contract.setDocuments(documents);
         Contract contractSaved = contractRepository.save(contract);
 
         UserContract userContract = new UserContract();
         userContract.setStatus(DocumentStatus.WAITING);
         userContract.setOwner(true);
-        userContract.setViewedDate(new Date());
-        userContract.setSignedDate(new Date());
+        userContract.setViewedDate(LocalDateTime.now());
+        userContract.setSignedDate(LocalDateTime.now());
 
         userContract.setUser(userSenderSaved);
         userContract.setContract(contractSaved);
@@ -176,16 +174,16 @@ public class DocumentServiceImpl implements DocumentService {
 
         Contract contract = new Contract();
         contract.setTitle(clientRequest.getMailTitle());
-        contract.setSentDate(new Date());
-        contract.setLastModifiedDate(new Date());
+        contract.setSentDate(LocalDateTime.now());
+        contract.setLastModifiedDate(LocalDateTime.now());
         contract.setDocuments(documents);
         Contract contractSaved = contractRepository.save(contract);
 
         UserContract userContract = new UserContract();
         userContract.setStatus(DocumentStatus.WAITING);
         userContract.setOwner(true);
-        userContract.setViewedDate(new Date());
-        userContract.setSignedDate(new Date());
+        userContract.setViewedDate(LocalDateTime.now());
+        userContract.setSignedDate(LocalDateTime.now());
 
         userContract.setUser(userSenderSaved);
         userContract.setContract(contractSaved);

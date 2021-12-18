@@ -8,6 +8,7 @@ import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
 import tech.vtsign.documentservice.model.UserContractResponse;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,13 +27,20 @@ public interface ContractService {
 
     UserContract findUserContractById(UUID contractUUID, UUID userUUID, UUID userContractUUID);
 
-    UserContract deleteContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+    UserContract deleteContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID);
 
-    UserContract hiddenContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+    UserContract hiddenContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID);
 
-    UserContract restoreContractById(UUID userUUID,UUID contractUUID, UUID userContractUUID);
+    UserContract restoreContractById(UUID userUUID, UUID contractUUID, UUID userContractUUID);
+
     User findUserById(UUID userUUID);
+
     User updateUser(User user);
+
     User saveUser(User user);
+
+    Long countAllContract(LocalDateTime startDate, LocalDateTime endDate);
+
+    Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate);
 
 }

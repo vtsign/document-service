@@ -9,7 +9,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -28,13 +28,12 @@ public class Contract extends Auditable<String> implements Serializable {
 
     private String title;
     @JsonProperty("sent_date")
-    private Date sentDate;
+    private LocalDateTime sentDate;
     @JsonProperty("last_modified_date")
-    private Date lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
     private boolean signed;
     @JsonProperty("complete_date")
-    private Date completeDate;
-
+    private LocalDateTime completeDate;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_uuid")

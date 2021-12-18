@@ -21,6 +21,7 @@ import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.service.*;
 
 import javax.persistence.criteria.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -50,7 +51,7 @@ public class ContractServiceImpl implements ContractService {
                     .filter(userContract -> userContract.getUser().getId().equals(receiverId))
                     .findFirst();
             UserContract userContract = userDocumentOptional.orElseThrow(() -> new UnauthorizedException("Invalid receiver"));
-            userContract.setViewedDate(new Date());
+            userContract.setViewedDate(LocalDateTime.now());
             return contract;
         }
     }
@@ -128,7 +129,7 @@ public class ContractServiceImpl implements ContractService {
                 .filter(ud -> (ud.getStatus().equals(DocumentStatus.SIGNED) || ud.getStatus().equals(DocumentStatus.READ)))
                 .count() == contract.getUserContracts().size() - 2;
         if (userContract.getViewedDate() == null) {
-            userContract.setViewedDate(new Date());
+            userContract.setViewedDate(LocalDateTime.now());
             //sent email receiver viewed
             DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
             documentCommonMessage.setTitle(String.format("%s - Viewed", contract.getTitle()));
@@ -168,7 +169,7 @@ public class ContractServiceImpl implements ContractService {
         }
 
         if (userContract.getStatus().equals(DocumentStatus.ACTION_REQUIRE)) {
-            userContract.setSignedDate(new Date());
+            userContract.setSignedDate(LocalDateTime.now());
             userContract.setStatus(DocumentStatus.SIGNED);
 
             // add xfdf for each document
@@ -182,7 +183,7 @@ public class ContractServiceImpl implements ContractService {
             // update contract status
 
 
-            contract.setLastModifiedDate(new Date());
+            contract.setLastModifiedDate(LocalDateTime.now());
             Set<UserContract> userContracts = contract.getUserContracts();
 
             DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
@@ -209,7 +210,7 @@ public class ContractServiceImpl implements ContractService {
 
             if (completed) {
                 contract.setSigned(true);
-                contract.setCompleteDate(new Date());
+                contract.setCompleteDate(LocalDateTime.now());
 
                 contract.getDocuments().forEach(document -> {
                     xfdfService.deleteAllByDocumentId(document.getId());
@@ -306,7 +307,7 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public User findUserById(UUID userUUID) {
-        return userRepository.findById(userUUID).orElseThrow(()->new NotFoundException("User not found"));
+        return userRepository.findById(userUUID).orElseThrow(() -> new NotFoundException("User not found"));
     }
 
     @Override
@@ -321,6 +322,16 @@ public class ContractServiceImpl implements ContractService {
         User userSave = new User();
         BeanUtils.copyProperties(user, userSave);
         return userRepository.save(userSave);
+    }
+
+    @Override
+    public Long countAllContract(LocalDateTime startDate, LocalDateTime endDate) {
+        return contractRepository.countAllByCreatedDateBetween(startDate, endDate);
+    }
+
+    @Override
+    public Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate) {
+        return contractRepository.countAllContractByCompleteDateNotNullAndCompleteDateBetween(startDate, endDate);
     }
 
 }
