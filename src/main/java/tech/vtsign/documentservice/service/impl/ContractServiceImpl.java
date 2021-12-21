@@ -331,8 +331,18 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
+    public Long countAllContract() {
+        return contractRepository.count();
+    }
+
+    @Override
     public Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate) {
         return contractRepository.countAllContractByCompleteDateNotNullAndCompleteDateBetween(startDate, endDate);
+    }
+
+    @Override
+    public Long countAllContractCompleted() {
+        return contractRepository.countAllContractByCompleteDateNotNull();
     }
 
     @Override

@@ -24,10 +24,17 @@ public class ManagementController {
 
     @GetMapping("/count-contract")
     public ResponseEntity<?> countContract(@RequestParam(value = "type", defaultValue = "week") String type) {
-        LocalDateTime[] dates = DateUtil.getDateBetween(type);
         CountContractDto countContractDto = new CountContractDto();
-        countContractDto.setSent(contractService.countAllContract(dates[0], dates[1]));
-        countContractDto.setCompleted(contractService.countAllContractCompleted(dates[0], dates[1]));
+
+        if("all".equals(type)) {
+            countContractDto.setSent(contractService.countAllContract());
+            countContractDto.setCompleted(contractService.countAllContractCompleted());
+        } else {
+            LocalDateTime[] dates = DateUtil.getDateBetween(type);
+            countContractDto.setSent(contractService.countAllContract(dates[0], dates[1]));
+            countContractDto.setCompleted(contractService.countAllContractCompleted(dates[0], dates[1]));
+        }
+
         return ResponseEntity.ok(countContractDto);
     }
 

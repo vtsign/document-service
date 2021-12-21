@@ -41,8 +41,10 @@ public interface ContractService {
     User saveUser(User user);
 
     Long countAllContract(LocalDateTime startDate, LocalDateTime endDate);
+    Long countAllContract();
 
     Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate);
+    Long countAllContractCompleted();
 
     ContractStatisticDto getStatistic(String type);
 
