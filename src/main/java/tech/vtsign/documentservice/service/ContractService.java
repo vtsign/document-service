@@ -38,8 +38,6 @@ public interface ContractService {
 
     User updateUser(User user);
 
-    User saveUser(User user);
-
     Long countAllContract(LocalDateTime startDate, LocalDateTime endDate);
     Long countAllContract();
 

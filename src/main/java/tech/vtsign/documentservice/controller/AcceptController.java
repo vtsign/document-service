@@ -79,13 +79,5 @@ public class AcceptController {
     @PutMapping("/update-user")
     public User updateUser(@RequestBody User user) {
         return contractService.updateUser(user);
-
-    }
-
-    @Hidden
-    @PostMapping("/save-user")
-    public User saveUser(@RequestBody User user) {
-        return contractService.saveUser(user);
-
     }
 }

@@ -313,16 +313,9 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public User updateUser(User user) {
-        User userUpdate = this.findUserById(user.getId());
+        User userUpdate = userRepository.findById(user.getId()).orElse(user);
         BeanUtils.copyProperties(user, userUpdate);
         return userRepository.save(userUpdate);
-    }
-
-    @Override
-    public User saveUser(User user) {
-        User userSave = new User();
-        BeanUtils.copyProperties(user, userSave);
-        return userRepository.save(userSave);
     }
 
     @Override
