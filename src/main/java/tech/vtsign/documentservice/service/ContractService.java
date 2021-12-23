@@ -7,6 +7,7 @@ import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
 import tech.vtsign.documentservice.model.ContractStatisticDto;
 import tech.vtsign.documentservice.model.SignContractByReceiver;
+import tech.vtsign.documentservice.model.SummaryContractDTO;
 import tech.vtsign.documentservice.model.UserContractResponse;
 
 import java.time.LocalDateTime;
@@ -39,11 +40,15 @@ public interface ContractService {
     User updateUser(User user);
 
     Long countAllContract(LocalDateTime startDate, LocalDateTime endDate);
+
     Long countAllContract();
 
     Long countAllContractCompleted(LocalDateTime startDate, LocalDateTime endDate);
+
     Long countAllContractCompleted();
 
     ContractStatisticDto getStatistic(String type);
+
+    SummaryContractDTO countAllContractWithAnyStatus(UUID userId);
 
 }

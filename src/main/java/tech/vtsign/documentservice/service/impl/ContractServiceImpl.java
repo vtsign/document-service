@@ -361,4 +361,18 @@ public class ContractServiceImpl implements ContractService {
         }
     }
 
+    @Override
+    public SummaryContractDTO countAllContractWithAnyStatus(UUID userId) {
+        long completed = this.countAllByUserAndStatus(userId, DocumentStatus.COMPLETED);
+        long waiting = countAllByUserAndStatus(userId, DocumentStatus.WAITING);
+        long actionRequire = countAllByUserAndStatus(userId, DocumentStatus.ACTION_REQUIRE);
+        long deleted = countAllByUserAndStatus(userId, DocumentStatus.DELETED);
+        SummaryContractDTO dto = new SummaryContractDTO();
+        dto.setCompleted(completed);
+        dto.setDeleted(deleted);
+        dto.setWaiting(waiting);
+        dto.setActionRequire(actionRequire);
+        return dto;
+    }
+
 }

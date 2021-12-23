@@ -8,13 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import tech.vtsign.documentservice.model.CountContractDto;
-import tech.vtsign.documentservice.model.DocumentStatus;
+import tech.vtsign.documentservice.model.SummaryContractDTO;
 import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.utils.DateUtil;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 
@@ -48,14 +46,8 @@ public class ManagementController {
     }
 
     @GetMapping("/count-all-contract")
-    public ResponseEntity<?> countContracts(@RequestParam(name = "id") UUID userId) {
-
-
-        Map<String, Object> result = new HashMap<>();
-        result.put(DocumentStatus.COMPLETED, contractService.countAllByUserAndStatus(userId, DocumentStatus.COMPLETED));
-        result.put(DocumentStatus.WAITING, contractService.countAllByUserAndStatus(userId, DocumentStatus.WAITING));
-        result.put(DocumentStatus.ACTION_REQUIRE, contractService.countAllByUserAndStatus(userId, DocumentStatus.ACTION_REQUIRE));
-        result.put(DocumentStatus.DELETED, contractService.countAllByUserAndStatus(userId, DocumentStatus.DELETED));
-        return ResponseEntity.ok(result);
+    public ResponseEntity<SummaryContractDTO> countContracts(@RequestParam(name = "id") UUID userId) {
+        SummaryContractDTO dto = contractService.countAllContractWithAnyStatus(userId);
+        return ResponseEntity.ok(dto);
     }
 }

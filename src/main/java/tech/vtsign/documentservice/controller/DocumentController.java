@@ -28,9 +28,7 @@ import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.ContractService;
 import tech.vtsign.documentservice.service.DocumentService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -105,12 +103,12 @@ public class DocumentController {
                     })
     })
     @GetMapping("/filter")
-    public ResponseEntity<?> retrieveContractByStatus(UserContract usercontract, Contract contract,
-                                                      @RequestParam(value = "page", required = false, defaultValue = "1") int page,
-                                                      @RequestParam(value = "size", required = false, defaultValue = "4") int size,
-                                                      @RequestParam(value = "sortField", required = false) String sortField,
-                                                      @RequestParam(value = "sortType", required = false, defaultValue = "desc") String sortType,
-                                                      @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<DTOList> retrieveContractByStatus(UserContract usercontract, Contract contract,
+                                                            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                                            @RequestParam(value = "size", required = false, defaultValue = "4") int size,
+                                                            @RequestParam(value = "sortField", required = false) String sortField,
+                                                            @RequestParam(value = "sortType", required = false, defaultValue = "desc") String sortType,
+                                                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
         User user = new User();
@@ -119,12 +117,13 @@ public class DocumentController {
         Page<UserContract> userContractPage = contractService.findContractsByUserIdAndStatus(usercontract, contract,
                 page - 1, size, sortField, sortType);
         List<Contract> contracts = userContractPage.stream().map(UserContract::getContract).collect(Collectors.toList());
-        Map<String, Object> result = new HashMap<>();
-        result.put("total_items", userContractPage.getTotalElements());
-        result.put("contracts", contracts);
-        result.put("total_pages", userContractPage.getTotalPages());
-        result.put("current_page", page);
-        return ResponseEntity.ok(result);
+        DTOList<Contract> dtoList = new DTOList<>();
+        dtoList.setPage(page);
+        dtoList.setPageSize(size);
+        dtoList.setTotalElements(userContractPage.getTotalElements());
+        dtoList.setTotalPages(userContractPage.getTotalPages());
+        dtoList.setList(contracts);
+        return ResponseEntity.ok(dtoList);
     }
 
     @Operation(summary = "Signed document")
@@ -166,15 +165,11 @@ public class DocumentController {
     }
 
     @GetMapping("/count")
-    public ResponseEntity<?> countContracts(@Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<SummaryContractDTO> countContracts(@Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
 
-        Map<String, Object> result = new HashMap<>();
-        result.put(DocumentStatus.COMPLETED, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.COMPLETED));
-        result.put(DocumentStatus.WAITING, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.WAITING));
-        result.put(DocumentStatus.ACTION_REQUIRE, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.ACTION_REQUIRE));
-        result.put(DocumentStatus.DELETED, contractService.countAllByUserAndStatus(userInfo.getId(), DocumentStatus.DELETED));
-        return ResponseEntity.ok(result);
+        SummaryContractDTO dto = contractService.countAllContractWithAnyStatus(userInfo.getId());
+        return ResponseEntity.ok(dto);
     }
 
     @Operation(summary = "Delete contract")
