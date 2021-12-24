@@ -132,17 +132,17 @@ public class ContractServiceImpl implements ContractService {
         if (userContract.getViewedDate() == null) {
             userContract.setViewedDate(LocalDateTime.now());
             //sent email receiver viewed
-            DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-            documentCommonMessage.setTitle(String.format("%s - Viewed", contract.getTitle()));
+            CommonMessage commonMessage = new CommonMessage();
+            commonMessage.setTitle(String.format("%s - Viewed", contract.getTitle()));
             User userView = userContract.getUser();
             Optional<UserContract> optionalUserContractOwner = contract.getUserContracts().stream()
                     .filter(UserContract::isOwner).findFirst();
             optionalUserContractOwner.ifPresent(ud -> {
-                documentCommonMessage.setTo(ud.getUser().getEmail());
+                commonMessage.setTo(ud.getUser().getEmail());
             });
-            documentCommonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu \"%s\" ",
+            commonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu \"%s\" ",
                     userView.getFullName(), userView.getEmail(), contract.getTitle()));
-            documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
+            documentProducer.sendMessage(commonMessage, TOPIC_NOTIFY_COMMON);
         }
 
         User user = userRepository.findById(userUUID).orElseThrow(() -> new NotFoundException("user not found"));
@@ -187,13 +187,13 @@ public class ContractServiceImpl implements ContractService {
             contract.setLastModifiedDate(LocalDateTime.now());
             Set<UserContract> userContracts = contract.getUserContracts();
 
-            DocumentCommonMessage documentCommonMessage = new DocumentCommonMessage();
-            documentCommonMessage.setTitle(String.format("%s - Signed", contract.getTitle()));
+            CommonMessage commonMessage = new CommonMessage();
+            commonMessage.setTitle(String.format("%s - Signed", contract.getTitle()));
 
-            documentCommonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
+            commonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
                     userSign.getFullName(), userSign.getEmail(), contract.getTitle()));
-            documentCommonMessage.setTo(userOwner.getEmail());
-            documentProducer.sendMessage(documentCommonMessage, TOPIC_NOTIFY_COMMON);
+            commonMessage.setTo(userOwner.getEmail());
+            documentProducer.sendMessage(commonMessage, TOPIC_NOTIFY_COMMON);
 
 
             if (documents != null) {
@@ -219,7 +219,7 @@ public class ContractServiceImpl implements ContractService {
                 });
                 userContracts.forEach(uc -> {
                     uc.setStatus(DocumentStatus.COMPLETED);
-                    DocumentCommonMessage documentCommonMessageCp = new DocumentCommonMessage();
+                    CommonMessage commonMessageCp = new CommonMessage();
                     List<Attachment> attachments = new ArrayList<>();
                     contract.getDocuments().forEach(document -> {
                         Attachment attachment = new Attachment();
@@ -227,13 +227,13 @@ public class ContractServiceImpl implements ContractService {
                         attachment.setName(document.getOriginName());
                         attachments.add(attachment);
                     });
-                    documentCommonMessageCp.setTitle(String.format("%s - Completed", contract.getTitle()));
-                    documentCommonMessageCp.setAttachments(attachments);
-                    documentCommonMessageCp.setMessage(
+                    commonMessageCp.setTitle(String.format("%s - Completed", contract.getTitle()));
+                    commonMessageCp.setAttachments(attachments);
+                    commonMessageCp.setMessage(
                             String.format("Tài liệu \"%s\" đã hoàn thành, mời bạn tải về bên dưới file đính kèm",
                                     contract.getTitle()));
-                    documentCommonMessageCp.setTo(uc.getUser().getEmail());
-                    documentProducer.sendMessage(documentCommonMessageCp, TOPIC_NOTIFY_COMMON);
+                    commonMessageCp.setTo(uc.getUser().getEmail());
+                    documentProducer.sendMessage(commonMessageCp, TOPIC_NOTIFY_COMMON);
 
                 });
             }
