@@ -87,6 +87,14 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
         return new ResponseEntity<>(exceptionResponse, UnauthorizedException.status);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public final ResponseEntity<ExceptionResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        ExceptionResponse exceptionResponse =
+                new ExceptionResponse(new Date(), ex.getMessage(), request.getDescription(false), HttpStatus.UNPROCESSABLE_ENTITY.value());
+
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public final ResponseEntity<ExceptionResponse> handleNotFoundException(NotFoundException ex, WebRequest request) {
         ExceptionResponse exceptionResponse =
