@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DocumentCommonMessage {
+public class CommonMessage {
     private String to;
     private String title;
     private String message;
