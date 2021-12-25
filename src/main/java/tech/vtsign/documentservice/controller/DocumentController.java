@@ -42,7 +42,7 @@ public class DocumentController {
     private final DocumentService documentService;
     private final ContractService contractService;
 
-    @Operation(summary = "Post client files and receivers")
+    @Operation(summary = "Post Client Files And Receivers")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success server will sent email to contact",
                     content = @Content
@@ -95,7 +95,7 @@ public class DocumentController {
     }
     //    end NHAN
 
-    @Operation(summary = "Get list contract by status", description = "DRAFT\n" +
+    @Operation(summary = "Get List Contract By Status", description = "DRAFT\n" +
             "SENT\n" +
             "ACTION_REQUIRE\n" +
             "WAITING\n" +
@@ -140,7 +140,7 @@ public class DocumentController {
         return ResponseEntity.ok(dtoList);
     }
 
-    @Operation(summary = "Signed document")
+    @Operation(summary = "Signed Document")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -164,7 +164,7 @@ public class DocumentController {
         return ResponseEntity.ok(rs);
     }
 
-    @Operation(summary = "Get contract by id")
+    @Operation(summary = "Get Contract By Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -186,7 +186,7 @@ public class DocumentController {
         return ResponseEntity.ok(contract);
     }
 
-    @Operation(summary = "Get contract by id")
+    @Operation(summary = "Count All Contracts With Many Stauts")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {
@@ -208,7 +208,7 @@ public class DocumentController {
         return ResponseEntity.ok(dto);
     }
 
-    @Operation(summary = "Delete contract")
+    @Operation(summary = "Delete Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -236,7 +236,7 @@ public class DocumentController {
         return ResponseEntity.ok(userContract);
     }
 
-    @Operation(summary = "Restore contract")
+    @Operation(summary = "Restore Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success contract restored",
                     content = @Content
@@ -264,7 +264,7 @@ public class DocumentController {
         return ResponseEntity.ok(userContract);
     }
 
-    @Operation(summary = "Hidden contract")
+    @Operation(summary = "Hidden Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success contract hidden",
                     content = {

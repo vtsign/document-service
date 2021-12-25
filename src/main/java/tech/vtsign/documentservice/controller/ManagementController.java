@@ -31,7 +31,7 @@ public class ManagementController {
     private final ContractService contractService;
 
 
-    @Operation(summary = "count contracts by id")
+    @Operation(summary = "Count Contracts By Id Rely On Date")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {
@@ -43,6 +43,10 @@ public class ManagementController {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
             @ApiResponse(responseCode = "422", description = "type not found",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
+            @ApiResponse(responseCode = "403", description = "forbidden",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
@@ -65,7 +69,7 @@ public class ManagementController {
         return ResponseEntity.ok(countContractDto);
     }
 
-    @Operation(summary = "statistic contracts by id")
+    @Operation(summary = "Statistic Contracts By Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {
@@ -81,6 +85,10 @@ public class ManagementController {
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
+            @ApiResponse(responseCode = "403", description = "forbidden",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
 
     })
 
@@ -90,7 +98,7 @@ public class ManagementController {
         return ResponseEntity.ok(contractService.getStatistic(type));
     }
 
-    @Operation(summary = "Count all contracts by id")
+    @Operation(summary = "Count All Contracts By Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {
@@ -98,6 +106,10 @@ public class ManagementController {
                     }
             ),
             @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
+            @ApiResponse(responseCode = "403", description = "forbidden",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
                     }),
