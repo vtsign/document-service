@@ -45,8 +45,6 @@ public class DocumentServiceImpl implements DocumentService {
     String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
     @Value("${tech.vtsign.hostname}")
     private String hostname;
-    @Value("${server.servlet.context-path}")
-    private String contextPath = "/document";
     @Value("${tech.vtsign.kafka.document-service.notify-sign}")
     private String TOPIC_SIGN;
     @Value("${tech.vtsign.zalopay.amount}")

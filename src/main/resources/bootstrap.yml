@@ -3,9 +3,8 @@ spring:
     name: document-service
   cloud:
     config:
-      uri: http://vtsign.tech:8888
+      uri: ${CONFIG_SERVER_URI:http://localhost:8888}
 server:
-  port: 8300
   servlet:
     context-path: /document
 tech:
