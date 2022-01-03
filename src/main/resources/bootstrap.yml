@@ -4,6 +4,8 @@ spring:
   cloud:
     config:
       uri: ${CONFIG_SERVER_URI:http://localhost:8888}
+  profiles:
+    active: ${PROFILE:dev}
 server:
   servlet:
     context-path: /document
