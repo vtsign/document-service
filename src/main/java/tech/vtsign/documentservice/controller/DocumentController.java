@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.User;
 import tech.vtsign.documentservice.domain.UserContract;
+import tech.vtsign.documentservice.exception.ExceptionResponse;
+import tech.vtsign.documentservice.exception.InvalidFormatException;
 import tech.vtsign.documentservice.exception.MissingFieldException;
 import tech.vtsign.documentservice.exception.NotFoundException;
 import tech.vtsign.documentservice.model.*;
@@ -40,11 +42,15 @@ public class DocumentController {
     private final DocumentService documentService;
     private final ContractService contractService;
 
-    @Operation(summary = "Post client files and receivers")
+    @Operation(summary = "Post Client Files And Receivers")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success server will sent email to contact",
                     content = @Content
-            )
+            ),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @PostMapping(value = "/signing")
     public ResponseEntity<Boolean> signing(@Validated @RequestPart("data") DocumentClientRequest documentClientRequests,
@@ -67,7 +73,11 @@ public class DocumentController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success server will sent email to contact",
                     content = @Content
-            )
+            ),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @PostMapping(value = "/signing2")
     public ResponseEntity<Boolean> signing2(@Validated @RequestPart("data") DocumentClientRequest documentClientRequests,
@@ -85,7 +95,7 @@ public class DocumentController {
     }
     //    end NHAN
 
-    @Operation(summary = "Get list contract by status", description = "DRAFT\n" +
+    @Operation(summary = "Get List Contract By Status", description = "DRAFT\n" +
             "SENT\n" +
             "ACTION_REQUIRE\n" +
             "WAITING\n" +
@@ -100,7 +110,11 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Not found contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @GetMapping("/filter")
     public ResponseEntity<DTOList> retrieveContractByStatus(UserContract usercontract, Contract contract,
@@ -126,7 +140,7 @@ public class DocumentController {
         return ResponseEntity.ok(dtoList);
     }
 
-    @Operation(summary = "Signed document")
+    @Operation(summary = "Signed Document")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -134,19 +148,23 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Not found contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @PostMapping("/sign_document")
-    public ResponseEntity<?> signByUser(@RequestPart(name = "signed") SignContractByReceiver u,
-                                        @RequestPart(required = false, name = "documents") List<MultipartFile> documents,
-                                        @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<Boolean> signByUser(@RequestPart(name = "signed") SignContractByReceiver u,
+                                              @RequestPart(required = false, name = "documents") List<MultipartFile> documents,
+                                              @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
         u.setUserId(userInfo.getId());
         Boolean rs = contractService.signContractByUser(u, documents);
         return ResponseEntity.ok(rs);
     }
 
-    @Operation(summary = "Get contract by id")
+    @Operation(summary = "Get Contract By Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -154,7 +172,11 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Not found contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @GetMapping("/contract")
     public ResponseEntity<Contract> findContractByContractUUID(@RequestParam(name = "c") UUID contractUUID,
@@ -164,6 +186,20 @@ public class DocumentController {
         return ResponseEntity.ok(contract);
     }
 
+    @Operation(summary = "Count All Contracts With Many Stauts")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = SummaryContractDTO.class))
+                    }
+            ),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
+
+    })
+
     @GetMapping("/count")
     public ResponseEntity<SummaryContractDTO> countContracts(@Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
@@ -172,7 +208,7 @@ public class DocumentController {
         return ResponseEntity.ok(dto);
     }
 
-    @Operation(summary = "Delete contract")
+    @Operation(summary = "Delete Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content
@@ -180,11 +216,19 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "422", description = "user cannot delete contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = InvalidFormatException.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteContract(@RequestBody UserContractRequest userContractRequest,
-                                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<UserContract> deleteContract(@RequestBody UserContractRequest userContractRequest,
+                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
         UserContract userContract = contractService
@@ -192,7 +236,7 @@ public class DocumentController {
         return ResponseEntity.ok(userContract);
     }
 
-    @Operation(summary = "Restore contract")
+    @Operation(summary = "Restore Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success contract restored",
                     content = @Content
@@ -200,11 +244,19 @@ public class DocumentController {
             @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "422", description = "user cannot restore contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = InvalidFormatException.class))
+                    }),
+            @ApiResponse(responseCode = "400", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @PostMapping("/restore")
-    public ResponseEntity<?> restoreContract(@RequestBody UserContractRequest userContractRequest,
-                                             @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<UserContract> restoreContract(@RequestBody UserContractRequest userContractRequest,
+                                                        @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
         UserContract userContract = contractService
@@ -212,19 +264,29 @@ public class DocumentController {
         return ResponseEntity.ok(userContract);
     }
 
-    @Operation(summary = "Hidden contract")
+    @Operation(summary = "Hidden Contract")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success contract hidden",
-                    content = @Content
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = UserContract.class))
+                    }
             ),
             @ApiResponse(responseCode = "404", description = "Not found contract or user or user do not own this contract",
                     content = {
                             @Content(mediaType = "application/json", schema = @Schema(implementation = NotFoundException.class))
-                    })
+                    }),
+            @ApiResponse(responseCode = "422", description = "user cannot hidden contract",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = InvalidFormatException.class))
+                    }),
+            @ApiResponse(responseCode = "", description = "Missing fields or accessToken",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
     })
     @DeleteMapping("/hidden")
-    public ResponseEntity<?> hiddenContract(@RequestBody UserContractRequest userContractRequest,
-                                            @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<UserContract> hiddenContract(@RequestBody UserContractRequest userContractRequest,
+                                                       @Parameter(hidden = true) @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         LoginServerResponseDto userInfo = userDetails.getLoginServerResponseDto();
         UserContract userContract = contractService

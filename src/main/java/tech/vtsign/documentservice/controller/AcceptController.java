@@ -60,17 +60,22 @@ public class AcceptController {
 
     @Operation(summary = "Sign Contract In Email")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = {
-                            @Content(mediaType = "application/json", schema = @Schema(implementation = UserContractResponse.class))
-                    }
+            @ApiResponse(responseCode = "200", description = "Successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))
             ),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    }),
+            @ApiResponse(responseCode = "419", description = "Missing require field see message for more details",
+                    content = {
+                            @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+                    })
     })
-
     @PostMapping("/signing")
     @Transactional
-    public ResponseEntity<?> signByReceiver(@RequestPart(name = "signed") SignContractByReceiver u,
-                                            @RequestPart(required = false, name = "documents") List<MultipartFile> documents) throws IOException {
+    public ResponseEntity<Boolean> signByReceiver(@RequestPart(name = "signed") SignContractByReceiver u,
+                                                  @RequestPart(required = false, name = "documents") List<MultipartFile> documents) throws IOException {
         Boolean rs = contractService.signContractByUser(u, documents);
         return ResponseEntity.ok(rs);
     }
