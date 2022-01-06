@@ -26,6 +26,8 @@ public class Contract extends Auditable<String> implements Serializable {
     @Column(name = "contract_uuid", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
+    @JsonProperty("public_message")
+    private String publicMessage;
     private String title;
     @JsonProperty("sent_date")
     private LocalDateTime sentDate;

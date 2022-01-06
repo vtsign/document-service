@@ -101,6 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
         contract.setSentDate(LocalDateTime.now());
         contract.setLastModifiedDate(LocalDateTime.now());
         contract.setDocuments(documents);
+        contract.setPublicMessage(clientRequest.getMailMessage());
         Contract contractSaved = contractRepository.save(contract);
 
         UserContract userContract = new UserContract();
@@ -120,7 +121,6 @@ public class DocumentServiceImpl implements DocumentService {
             userContractTemp.setContract(contractSaved);
             userContractTemp.setPermission(receiver.getPermission());
             userContractTemp.setSecretKey(receiver.getKey());
-            userContractTemp.setPublicMessage(clientRequest.getMailMessage());
             userContracts.add(userContractTemp);
         }
         contractSaved.setUserContracts(userContracts);
@@ -175,6 +175,7 @@ public class DocumentServiceImpl implements DocumentService {
         contract.setSentDate(LocalDateTime.now());
         contract.setLastModifiedDate(LocalDateTime.now());
         contract.setDocuments(documents);
+        contract.setPublicMessage(clientRequest.getMailMessage());
         Contract contractSaved = contractRepository.save(contract);
 
         UserContract userContract = new UserContract();
@@ -194,7 +195,6 @@ public class DocumentServiceImpl implements DocumentService {
             userContractTemp.setContract(contractSaved);
             userContractTemp.setPermission(receiver.getPermission());
             userContractTemp.setSecretKey(receiver.getKey());
-            userContractTemp.setPublicMessage(clientRequest.getMailMessage());
             userContracts.add(userContractTemp);
         }
         contractSaved.setUserContracts(userContracts);
@@ -268,6 +268,7 @@ public class DocumentServiceImpl implements DocumentService {
                 receiverContract.setUrl(url);
                 receiverContract.setSenderName(senderName);
                 receiverContract.setCreatedDate(contract.getSentDate());
+
                 this.sendMail(receiverContract, TOPIC_SIGN);
             }
         });
