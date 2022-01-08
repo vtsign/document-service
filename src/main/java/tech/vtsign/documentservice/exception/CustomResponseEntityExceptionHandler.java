@@ -64,11 +64,19 @@ public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptio
 
     //5
     @ExceptionHandler(LockedException.class)
-    public final ResponseEntity<ExceptionResponse> lockedException(LockedException ex, WebRequest request) {
+    public final ResponseEntity<ExceptionResponse> handlelockedException(LockedException ex, WebRequest request) {
         ExceptionResponse exceptionResponse =
                 new ExceptionResponse(new Date(), ex.getMessage(), request.getDescription(false), LockedException.status.value());
 
         return new ResponseEntity<>(exceptionResponse, LockedException.status);
+    }
+
+    @ExceptionHandler(SignedException.class)
+    public final ResponseEntity<ExceptionResponse> handlelockedException(SignedException ex, WebRequest request) {
+        ExceptionResponse exceptionResponse =
+                new ExceptionResponse(new Date(), ex.getMessage(), request.getDescription(false), SignedException.status.value());
+
+        return new ResponseEntity<>(exceptionResponse, SignedException.status);
     }
 
     @ExceptionHandler(MissingFieldException.class)

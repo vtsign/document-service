@@ -114,10 +114,11 @@ public class ContractServiceImpl implements ContractService {
         UserContract userContract = this.findUserContractById(contractId, userUUID, userContractUUID);
 
         String status = userContract.getStatus();
+
         if (status.equals(DocumentStatus.ACTION_REQUIRE) && !userContract.getSecretKey().equals(secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
-        if (status.equals(DocumentStatus.SIGNED)) {
+        if (status.equals(DocumentStatus.SIGNED) || status.equals(DocumentStatus.COMPLETED)) {
             throw new SignedException("A Contract was signed by this User");
         }
         if (status.equals(DocumentStatus.DELETED) || status.equals(DocumentStatus.HIDDEN)) {
