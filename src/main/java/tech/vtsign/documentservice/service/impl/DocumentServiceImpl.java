@@ -257,7 +257,7 @@ public class DocumentServiceImpl implements DocumentService {
         userContracts.forEach(uc -> {
             User user = uc.getUser();
             if (uc.getPermission() != null && uc.getPermission().equals("sign")) {
-                String url = String.format("%s/signDocument?c=%s&r=%s&uc=%s",
+                String url = String.format("%s/sign-document?c=%s&r=%s&uc=%s",
                         hostname,
                         contract.getId(), user.getId(), uc.getId()
                 );
