@@ -119,7 +119,7 @@ public class ContractServiceImpl implements ContractService {
         if (!status.equals(DocumentStatus.ACTION_REQUIRE)) {
             throw new SignedException("Document cannot sign by this user");
         }
-        if (!getBCryptPasswordEncoder.matches(userContract.getSecretKey(), secretKey)) {
+        if (!getBCryptPasswordEncoder.matches(secretKey, userContract.getSecretKey())) {
             throw new LockedException("Secret Key does not match");
         }
 
