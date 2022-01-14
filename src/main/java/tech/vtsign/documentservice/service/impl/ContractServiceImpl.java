@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,7 +38,7 @@ public class ContractServiceImpl implements ContractService {
     private final XFDFService xfdfService;
     private final AzureStorageService azureStorageService;
     private final DocumentProducer documentProducer;
-
+    private final PasswordEncoder getBCryptPasswordEncoder;
     @Value("${tech.vtsign.kafka.document-service.notify-common}")
     private String TOPIC_NOTIFY_COMMON;
 
@@ -118,7 +119,7 @@ public class ContractServiceImpl implements ContractService {
         if (!status.equals(DocumentStatus.ACTION_REQUIRE)) {
             throw new SignedException("Document cannot sign by this user");
         }
-        if (!userContract.getSecretKey().equals(secretKey)) {
+        if (!getBCryptPasswordEncoder.matches(userContract.getSecretKey(), secretKey)) {
             throw new LockedException("Secret Key does not match");
         }
 

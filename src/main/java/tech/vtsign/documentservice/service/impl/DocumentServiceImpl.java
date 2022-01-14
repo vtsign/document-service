@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vtsign.documentservice.domain.Contract;
@@ -41,6 +42,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final UserDocumentRepository userDocumentRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder getBCryptPasswordEncoder;
     String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
     String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
     @Value("${tech.vtsign.hostname}")
@@ -120,13 +122,14 @@ public class DocumentServiceImpl implements DocumentService {
             UserContract userContractTemp = this.getUserContract(receiver);
             userContractTemp.setContract(contractSaved);
             userContractTemp.setPermission(receiver.getPermission());
-            userContractTemp.setSecretKey(receiver.getKey());
+            userContractTemp.setSecretKey(getBCryptPasswordEncoder.encode(receiver.getKey()));
+            userContractTemp.setPreHashSecretKey(receiver.getKey());
             userContracts.add(userContractTemp);
         }
         contractSaved.setUserContracts(userContracts);
         List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
-        this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContractList);
+        this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContracts);
 
 
         return success;
@@ -195,6 +198,7 @@ public class DocumentServiceImpl implements DocumentService {
             userContractTemp.setContract(contractSaved);
             userContractTemp.setPermission(receiver.getPermission());
             userContractTemp.setSecretKey(receiver.getKey());
+
             userContracts.add(userContractTemp);
         }
         contractSaved.setUserContracts(userContracts);
@@ -218,7 +222,7 @@ public class DocumentServiceImpl implements DocumentService {
                 BeanUtils.copyProperties(clientRequest, receiverContract);
                 Receiver receiver = new Receiver();
                 receiver.setName(user.getFullName());
-                receiver.setKey(uc.getSecretKey());
+                receiver.setKey(uc.getPreHashSecretKey());
                 receiver.setPrivateMessage(uc.getPrivateMessage());
                 BeanUtils.copyProperties(user, receiver);
                 receiverContract.setReceiver(receiver);
@@ -249,7 +253,7 @@ public class DocumentServiceImpl implements DocumentService {
         documentProducer.sendMessage(object, topic);
     }
 
-    public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName, List<UserContract> userContracts) {
+    public void sendEmailSign(Contract contract, DocumentClientRequest clientRequest, String senderName, Set<UserContract> userContracts) {
         userContracts.forEach(uc -> {
             User user = uc.getUser();
             if (uc.getPermission() != null && uc.getPermission().equals("sign")) {
@@ -261,7 +265,7 @@ public class DocumentServiceImpl implements DocumentService {
                 BeanUtils.copyProperties(clientRequest, receiverContract);
                 Receiver receiver = new Receiver();
                 receiver.setName(user.getFullName());
-                receiver.setKey(uc.getSecretKey());
+                receiver.setKey(uc.getPreHashSecretKey());
                 receiver.setPrivateMessage(uc.getPrivateMessage());
                 BeanUtils.copyProperties(user, receiver);
                 receiverContract.setReceiver(receiver);

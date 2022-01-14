@@ -37,6 +37,9 @@ public class UserContract extends Auditable<String> implements Serializable {
     @JsonProperty("signed_date")
     private LocalDateTime signedDate;
 
+    @Transient
+    private String preHashSecretKey;
+
     private boolean owner = false;
 
     @ManyToOne(cascade = CascadeType.ALL)
