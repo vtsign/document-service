@@ -94,7 +94,7 @@ public class ManagementController {
 
 
     @GetMapping("/statistic-contract")
-    public ResponseEntity<?> statisticUser(@RequestParam(name = "type", defaultValue = "week") String type) {
+    public ResponseEntity<?> statisticContract(@RequestParam(name = "type", defaultValue = "week") String type) {
         return ResponseEntity.ok(contractService.getStatistic(type));
     }
 
