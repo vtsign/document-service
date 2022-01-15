@@ -133,7 +133,8 @@ public class DocumentServiceImpl implements DocumentService {
         List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
         this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContracts);
-        String message = String.format("%s đã khởi tạo hợp đồng \"%s\"", userSenderSaved.getFullName(), contractSaved.getTitle());
+        String message = String.format("%s(%s) đã khởi tạo tài liệu \"%s\"", userSenderSaved.getFullName(),
+                userSenderSaved.getEmail(), contractSaved.getTitle());
 
         contractTransactionService.createContractTransaction(message, ContractTransactionAction.CREATED, contractSaved, userSenderSaved);
 

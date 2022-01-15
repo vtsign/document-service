@@ -235,7 +235,7 @@ public class ContractServiceImpl implements ContractService {
 //                    document.getXfdfs().clear();
                 });
                 //createContractTransaction
-                String messageCompleted = String.format("Tài liệu %s đã hoàn thành", contract.getTitle());
+                String messageCompleted = String.format("Tài liệu \"%s\" đã hoàn thành", contract.getTitle());
                 contractTransactionService.createContractTransaction(messageCompleted,
                         ContractTransactionAction.COMPLETED,
                         contract,
