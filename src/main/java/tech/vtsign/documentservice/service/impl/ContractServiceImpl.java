@@ -39,6 +39,7 @@ public class ContractServiceImpl implements ContractService {
     private final AzureStorageService azureStorageService;
     private final DocumentProducer documentProducer;
     private final PasswordEncoder getBCryptPasswordEncoder;
+    private final ContractTransactionService contractTransactionService;
     @Value("${tech.vtsign.kafka.document-service.notify-common}")
     private String TOPIC_NOTIFY_COMMON;
 
@@ -143,6 +144,12 @@ public class ContractServiceImpl implements ContractService {
             commonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu \"%s\" ",
                     userView.getFullName(), userView.getEmail(), contract.getTitle()));
             documentProducer.sendMessage(commonMessage, TOPIC_NOTIFY_COMMON);
+            // save history
+
+            contractTransactionService.createContractTransaction(message,
+                    ContractTransactionAction.VIEW,
+                    contract,
+                    userView);
         }
 
         User user = userRepository.findById(userUUID).orElseThrow(() -> new NotFoundException("user not found"));
