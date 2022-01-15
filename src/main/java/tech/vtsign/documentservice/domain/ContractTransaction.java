@@ -27,7 +27,6 @@ public class ContractTransaction {
     private ContractTransactionAction action;
     private String message;
 
-    @JsonIgnore
     @ManyToOne()
     @JoinColumn(name = "user_uuid")
     private User user;
