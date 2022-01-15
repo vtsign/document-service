@@ -32,6 +32,9 @@ public class User extends Auditable<String> implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<UserContract> userContracts;
+//
+//    @OneToMany(mappedBy = "user")
+//    private Set<ContractTransaction> contractTransactions;
 
     @Transient
     @JsonProperty("full_name")
