@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import tech.vtsign.documentservice.constant.ContractTransactionAction;
 import tech.vtsign.documentservice.domain.*;
 import tech.vtsign.documentservice.exception.*;
 import tech.vtsign.documentservice.model.*;
@@ -141,8 +142,10 @@ public class ContractServiceImpl implements ContractService {
             optionalUserContractOwner.ifPresent(ud -> {
                 commonMessage.setTo(ud.getUser().getEmail());
             });
-            commonMessage.setMessage(String.format("%s(%s) vừa xem tài liệu \"%s\" ",
-                    userView.getFullName(), userView.getEmail(), contract.getTitle()));
+            String message = String.format("%s(%s) vừa xem tài liệu \"%s\" ",
+                    userView.getFullName(), userView.getEmail(), contract.getTitle());
+
+            commonMessage.setMessage(message);
             documentProducer.sendMessage(commonMessage, TOPIC_NOTIFY_COMMON);
             // save history
 
@@ -158,7 +161,6 @@ public class ContractServiceImpl implements ContractService {
         userContractResponse.setLastSign(lastSign);
         return userContractResponse;
     }
-
 
     @SneakyThrows
     @Override
@@ -197,10 +199,17 @@ public class ContractServiceImpl implements ContractService {
             CommonMessage commonMessage = new CommonMessage();
             commonMessage.setTitle(String.format("%s - Signed", contract.getTitle()));
 
-            commonMessage.setMessage(String.format("%s(%s) vừa ký tài liệu \"%s\"",
-                    userSign.getFullName(), userSign.getEmail(), contract.getTitle()));
+            String message = String.format("%s(%s) vừa ký tài liệu \"%s\"",
+                    userSign.getFullName(), userSign.getEmail(), contract.getTitle());
+            commonMessage.setMessage(message);
             commonMessage.setTo(userOwner.getEmail());
             documentProducer.sendMessage(commonMessage, TOPIC_NOTIFY_COMMON);
+
+            //setContractTransaction
+            contractTransactionService.createContractTransaction(message,
+                    ContractTransactionAction.SIGNED,
+                    contract,
+                    userSign);
 
 
             if (documents != null) {
@@ -217,6 +226,7 @@ public class ContractServiceImpl implements ContractService {
                     .count() == contract.getUserContracts().size() - 1;
 
             if (completed) {
+
                 contract.setSigned(true);
                 contract.setCompleteDate(LocalDateTime.now());
 
@@ -224,6 +234,13 @@ public class ContractServiceImpl implements ContractService {
                     xfdfService.deleteAllByDocumentId(document.getId());
 //                    document.getXfdfs().clear();
                 });
+                //createContractTransaction
+                String messageCompleted = String.format("Tài liệu %s đã hoàn thành", contract.getTitle());
+                contractTransactionService.createContractTransaction(messageCompleted,
+                        ContractTransactionAction.COMPLETED,
+                        contract,
+                        null);
+
                 userContracts.forEach(uc -> {
                     uc.setStatus(DocumentStatus.COMPLETED);
                     CommonMessage commonMessageCp = new CommonMessage();
@@ -241,6 +258,9 @@ public class ContractServiceImpl implements ContractService {
                                     contract.getTitle()));
                     commonMessageCp.setTo(uc.getUser().getEmail());
                     documentProducer.sendMessage(commonMessageCp, TOPIC_NOTIFY_COMMON);
+
+                    //setContractTransaction
+
 
                 });
             }

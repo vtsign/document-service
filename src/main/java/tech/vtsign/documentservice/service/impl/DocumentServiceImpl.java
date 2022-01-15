@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import tech.vtsign.documentservice.constant.ContractTransactionAction;
+import tech.vtsign.documentservice.constant.TransactionConstant;
 import tech.vtsign.documentservice.domain.Contract;
 import tech.vtsign.documentservice.domain.Document;
 import tech.vtsign.documentservice.domain.User;
@@ -23,9 +25,9 @@ import tech.vtsign.documentservice.repository.UserDocumentRepository;
 import tech.vtsign.documentservice.repository.UserRepository;
 import tech.vtsign.documentservice.security.UserDetailsImpl;
 import tech.vtsign.documentservice.service.AzureStorageService;
+import tech.vtsign.documentservice.service.ContractTransactionService;
 import tech.vtsign.documentservice.service.DocumentProducer;
 import tech.vtsign.documentservice.service.DocumentService;
-import tech.vtsign.documentservice.utils.TransactionConstant;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,6 +45,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserDocumentRepository userDocumentRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder getBCryptPasswordEncoder;
+    private final ContractTransactionService contractTransactionService;
     String regexPhone = "^(\\+\\d{1,2}\\s?)?1?\\-?\\.?\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$";
     String regexEmail = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
     @Value("${tech.vtsign.hostname}")
@@ -130,6 +133,9 @@ public class DocumentServiceImpl implements DocumentService {
         List<UserContract> userContractList = userDocumentRepository.saveAll(userContracts);
 
         this.sendEmailSign(contractSaved, clientRequest, senderInfo.getFullName(), userContracts);
+        String message = String.format("%s đã khởi tạo hợp đồng \"%s\"", userSenderSaved.getFullName(), contractSaved.getTitle());
+
+        contractTransactionService.createContractTransaction(message, ContractTransactionAction.CREATED, contractSaved, userSenderSaved);
 
 
         return success;
@@ -276,6 +282,7 @@ public class DocumentServiceImpl implements DocumentService {
                 this.sendMail(receiverContract, TOPIC_SIGN);
             }
         });
+
 
     }
 

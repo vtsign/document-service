@@ -1,4 +1,4 @@
-package tech.vtsign.documentservice.utils;
+package tech.vtsign.documentservice.constant;
 
 public class TransactionConstant {
     public static String DEPOSIT_STATUS = "deposit";

@@ -45,4 +45,8 @@ public class Contract extends Auditable<String> implements Serializable {
     @OneToMany(mappedBy = "contract")
     @JsonProperty("user_contracts")
     private Set<UserContract> userContracts;
+
+    @OneToMany(mappedBy = "contract")
+    @JsonProperty("contract_transactions")
+    private Set<ContractTransaction> contractTransaction;
 }
